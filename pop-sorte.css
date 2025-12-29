@@ -39,11 +39,13 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
 
 .cta-popluz { background: linear-gradient(135deg, #0ea5e9, #0369a1); }
 
+/* REQ 1: Allow coming-soon-badge to be visible outside its container */
 .coming-soon-btn {
   position: relative;
   opacity: 0.7;
   cursor: not-allowed !important;
   pointer-events: none;
+  overflow: visible; /* REQ 1: Override parent overflow:hidden to show badge outside container */
 }
 
 .coming-soon-badge {
