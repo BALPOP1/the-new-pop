@@ -46,9 +46,12 @@ class DataFetcher {
                 headers['Authorization'] = `Bearer ${authToken}`;
             }
             
-            const response = await fetch(`${API_BASE_URL}/api/admin/entries?t=1767032190908`, {
+            // REQ 3: Use dynamic timestamp for cache-busting
+            const url = `${API_BASE_URL}/api/admin/entries?t=${Date.now()}`;
+            const response = await fetch(url, {
                 method: 'GET',
-                headers: headers
+                headers: headers,
+                cache: 'no-store' // REQ 3: Ensure fresh data
             });
             
             if (!response.ok) {
@@ -59,8 +62,25 @@ class DataFetcher {
             }
             
             const csvText = await response.text();
-            this.entries = this.parseCSV(csvText);
+            
+            // REQ 3: Remove BOM (Byte Order Mark) if present and trim
+            const cleanedCsv = csvText.replace(/^\uFEFF/, '').trim();
+            
+            // REQ 3: Debug - log first 500 chars to verify format
+            if (cleanedCsv.length > 0) {
+                console.log('REQ 3: CSV preview (first 500 chars):', cleanedCsv.substring(0, 500));
+            } else {
+                console.error('REQ 3: CSV response is empty!');
+                throw new Error('Empty CSV response from API');
+            }
+            
+            this.entries = this.parseCSV(cleanedCsv);
             this.lastFetchTime = new Date();
+            
+            if (this.entries.length === 0) {
+                console.warn('REQ 3: No entries parsed from CSV. Check parsing logic.');
+            }
+            
             return this.entries;
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -69,36 +89,59 @@ class DataFetcher {
     }
 
     parseCSV(csvText) {
-        const lines = csvText.split('\n');
+        // REQ 3: Handle both Unix and Windows line endings
+        const lines = csvText.split(/\r?\n/).filter(line => line.trim().length > 0);
         const entries = [];
         
-        // Skip header row
+        if (lines.length === 0) {
+            console.warn('REQ 3: CSV is empty or has no valid lines');
+            return entries;
+        }
+        
+        // REQ 3: Skip header row
         for (let i = 1; i < lines.length; i++) {
             const line = lines[i].trim();
             if (!line) continue;
             
             const values = this.parseCSVLine(line);
-            if (values.length < 9) continue;
+            
+            // REQ 3: Debug first few rows to identify parsing issues
+            if (i <= 3) {
+                console.log(`REQ 3: Row ${i} parsed ${values.length} columns:`, values.slice(0, 5));
+            }
+            
+            // REQ 3: Require at least 9 columns (the essential data columns)
+            if (values.length < 9) {
+                console.warn(`REQ 3: Skipping row ${i} - only ${values.length} columns found`);
+                continue;
+            }
             
             const entry = {
-                registrationDateTime: values[0],
+                registrationDateTime: values[0] || '',
                 platform: (values[1] || 'POPN1').toUpperCase(),
-                gameId: values[2],
-                whatsapp: values[3],
-                chosenNumbers: this.parseNumbers(values[4]),
-                drawDate: values[5],
-                contest: values[6],
-                ticketNumber: values[7],
-                status: values[8]
+                gameId: values[2] || '',
+                whatsapp: values[3] || '',
+                chosenNumbers: this.parseNumbers(values[4] || ''),
+                drawDate: values[5] || '',
+                contest: values[6] || '',
+                ticketNumber: values[7] || '',
+                status: values[8] || ''
             };
             
-            entries.push(entry);
+            // REQ 3: Validate essential fields before adding
+            if (entry.gameId && entry.chosenNumbers && entry.chosenNumbers.length > 0) {
+                entries.push(entry);
+            } else {
+                console.warn(`REQ 3: Skipping invalid entry at row ${i}:`, entry);
+            }
         }
         
+        console.log(`REQ 3: Successfully parsed ${entries.length} valid entries from ${lines.length - 1} data rows`);
         return entries;
     }
 
     parseCSVLine(line) {
+        // REQ 3: Fixed CSV parser to properly handle quoted values and remove quotes
         const values = [];
         let current = '';
         let inQuotes = false;
@@ -107,21 +150,30 @@ class DataFetcher {
             const char = line[i];
             
             if (char === '"') {
+                // REQ 3: Skip quote characters - they're just delimiters, not part of the value
                 inQuotes = !inQuotes;
             } else if (char === ',' && !inQuotes) {
+                // REQ 3: Push value when we hit a comma outside quotes
                 values.push(current.trim());
                 current = '';
             } else {
+                // REQ 3: Add character to current value (quotes already skipped above)
                 current += char;
             }
         }
         
+        // REQ 3: Push the last value
         values.push(current.trim());
         return values;
     }
 
     parseNumbers(numberString) {
-        const numbers = numberString.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
+        // REQ 3: Handle numbers that may have spaces after commas (e.g., "01, 12, 22, 25, 44")
+        if (!numberString || typeof numberString !== 'string') return [];
+        
+        // REQ 3: Remove any remaining quotes, split by comma, trim each, and parse
+        const cleaned = numberString.replace(/^["']|["']$/g, ''); // Remove surrounding quotes if any
+        const numbers = cleaned.split(',').map(n => parseInt(n.trim(), 10)).filter(n => !isNaN(n) && n > 0);
         return numbers;
     }
 
