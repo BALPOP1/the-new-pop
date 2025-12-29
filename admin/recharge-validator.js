@@ -1,4 +1,5 @@
-const RECHARGE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1c6gnCngs2wFOvVayd5XpM9D3LOlKUxtSjl7gfszXcMg/export?format=csv&gid=0';
+// REQ 3: Migrated from direct Google Sheets URL to API endpoint
+const API_BASE_URL = 'https://popsorte-api.danilla-vargas1923.workers.dev';
 
 const BRT_OFFSET_HOURS = 3;
 const BRT_OFFSET_MS = BRT_OFFSET_HOURS * 60 * 60 * 1000;
@@ -38,17 +39,59 @@ class RechargeValidator {
             '12-25', // Dec 25
             '01-01'  // Jan 1
         ];
+        
+        // REQ 3: Initialize token from session if available (fixes race condition)
+        this.initializeTokenFromSession();
+    }
+    
+    // REQ 3: Initialize token from session storage on load
+    initializeTokenFromSession() {
+        try {
+            if (typeof getSession === 'function') {
+                const session = getSession();
+                if (session && session.token && typeof authToken === 'undefined') {
+                    // Set global authToken if not already set
+                    window.authToken = session.token;
+                }
+            }
+        } catch (error) {
+            console.warn('REQ 3: Could not initialize token from session:', error);
+        }
     }
 
+    // REQ 3: Fetch recharge data via API instead of direct Google Sheets access
     async fetchRechargeData() {
-        const response = await fetch(RECHARGE_SHEET_CSV_URL);
-        if (!response.ok) {
-            throw new Error('Failed to fetch recharge data from Google Sheets');
+        try {
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            // REQ 3: Add auth token if available (for admin requests)
+            if (typeof authToken !== 'undefined' && authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+            
+            // REQ 3: Use API endpoint instead of direct Google Sheets URL
+            const response = await fetch(`${API_BASE_URL}/api/admin/recharges`, {
+                method: 'GET',
+                headers: headers
+            });
+            
+            if (!response.ok) {
+                if (response.status === 401) {
+                    throw new Error('Unauthorized - Please login again');
+                }
+                throw new Error(`Failed to fetch recharge data: ${response.status}`);
+            }
+            
+            const csvText = await response.text();
+            this.parseRechargeCSV(csvText);
+            this.lastFetchTime = new Date();
+            return this.recharges;
+        } catch (error) {
+            console.error('REQ 3: Error fetching recharge data:', error);
+            throw error;
         }
-        const csvText = await response.text();
-        this.parseRechargeCSV(csvText);
-        this.lastFetchTime = new Date();
-        return this.recharges;
     }
 
     // ---------- Draw / cutoff helpers (BRT, merged windows) ----------

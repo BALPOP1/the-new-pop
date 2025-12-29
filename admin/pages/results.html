@@ -108,7 +108,8 @@
             const results = validator.getAllResults();
             
             if (results.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhum resultado encontrado no Google Sheet</td></tr>';
+                // REQ 3: Updated text to reflect API migration
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhum resultado encontrado na API</td></tr>';
                 return;
             }
             
