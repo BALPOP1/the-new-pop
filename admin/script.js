@@ -543,7 +543,15 @@ function initializePage(pageId) {
     }
 }
 
+// REQ 2: Ensure all dependencies are loaded before initialization
 document.addEventListener('DOMContentLoaded', () => {
+    // REQ 2: Safety check - ensure dataFetcher is available
+    if (typeof dataFetcher === 'undefined') {
+        console.error('dataFetcher is not defined. Check script loading order.');
+        showError('Failed to initialize: dataFetcher is not defined. Please refresh the page.');
+        return;
+    }
+    
     initDashboard();
     setupAutoRefresh();
     

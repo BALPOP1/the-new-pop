@@ -14,18 +14,20 @@ class DataFetcher {
     constructor() {
         this.entries = [];
         this.lastFetchTime = null;
-        
-        // REQ 2: Initialize token from session if available (fixes race condition)
-        this.initializeTokenFromSession();
     }
 
     // REQ 2: Initialize token from session storage on load
     initializeTokenFromSession() {
-        if (typeof getSession === 'function') {
-            const session = getSession();
-            if (session && session.token) {
-                authToken = session.token;
+        try {
+            if (typeof getSession === 'function') {
+                const session = getSession();
+                if (session && session.token) {
+                    authToken = session.token;
+                }
             }
+        } catch (error) {
+            // REQ 2: Don't let initialization errors prevent dataFetcher from being created
+            console.warn('Could not initialize token from session:', error);
         }
     }
 
@@ -169,5 +171,17 @@ class DataFetcher {
     }
 }
 
-// Global instance
+// REQ 2: Global instance - ensure it's accessible globally
 const dataFetcher = new DataFetcher();
+
+// REQ 2: Initialize token after instance creation (prevents constructor errors)
+try {
+    dataFetcher.initializeTokenFromSession();
+} catch (error) {
+    console.warn('REQ 2: Token initialization failed:', error);
+}
+
+// REQ 2: Explicitly expose to window for compatibility
+if (typeof window !== 'undefined') {
+    window.dataFetcher = dataFetcher;
+}

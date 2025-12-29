@@ -624,11 +624,18 @@
         </footer>
     </div>
 
+    <!-- REQ 2: Load scripts in correct order - dataFetcher must load before script.js -->
     <script src="results-fetcher.js"></script>
     <script src="data-fetcher.js"></script>
     <script src="validator.js"></script>
     <script src="recharge-validator.js"></script>
     <script src="navigation.js"></script>
+    <!-- REQ 2: Verify dataFetcher exists before loading script.js -->
+    <script>
+        if (typeof dataFetcher === 'undefined') {
+            console.error('REQ 2: dataFetcher failed to load. Check data-fetcher.js for errors.');
+        }
+    </script>
     <script src="script.js"></script>
 </body>
 </html>
