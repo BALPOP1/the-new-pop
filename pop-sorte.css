@@ -694,7 +694,6 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   gap: 12px;
   align-items: center;
   justify-items: center;
-  /* REQ 5: Match original min-height */
   min-height: 78px;
   width: 100%;
   background: rgba(255, 255, 255, 0.04);
@@ -706,10 +705,13 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
 }
 .prize-chip, .cta-button {
-  /* REQ 5: Use min-height instead of fixed height to match original */
+  /* REQ 5: Use min-height for desktop, allow mobile override */
   min-height: 78px;
   display: inline-flex; align-items: center; gap: 10px;
   padding: 15px 20px; border-radius: 14px;
+  /* REQ 2: Prevent stretching */
+  flex-shrink: 0;
+  flex-grow: 0;
 }
 .cta-stack .prize-chip {
   grid-area: prize;
@@ -721,8 +723,11 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   width: 100%;
   max-width: none;
   justify-self: stretch;
-  /* REQ 5: Use min-height to match original, allow natural height */
+  /* REQ 2: Prevent horizontal stretching, use vertical scaling */
+  /* REQ 5: Use min-height for desktop, allow mobile override */
   min-height: 78px;
+  flex-shrink: 0;
+  flex-grow: 0;
 }
 .cta-stack .cta-button.cta-1 { grid-area: cta1; }
 .cta-stack .cta-button.cta-2 { grid-area: cta2; }
@@ -1747,6 +1752,7 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   .cta-stack {
     flex-direction: row;  /* Explicit: keep items side by side on phone */
     gap: 8px;
+    /* REQ 5: Mobile - use auto height to match original */
     min-height: auto;
     width: 100%;
     justify-content: center;
@@ -1755,7 +1761,9 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   
   .prize-chip, .cta-button {
     flex: 1; /* Make both items take equal width to help centering */
+    /* REQ 5: Mobile - use auto height and smaller padding to match original */
     min-height: auto;
+    height: auto;
     padding: 12px 14px;
     font-size: 0.8rem;
     display: flex;
