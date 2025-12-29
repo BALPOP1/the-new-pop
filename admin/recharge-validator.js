@@ -12,7 +12,12 @@ if (typeof window.API_BASE_URL === 'undefined') {
 var API_BASE_URL = window.API_BASE_URL;
 
 // REQ 3: Session token (set after login)
-let authToken = null;
+// REQ 3: Share authToken across all admin scripts (avoid redeclaration error)
+if (typeof window.authToken === 'undefined') {
+    window.authToken = null;
+}
+// REQ 3: Use var to allow redeclaration across multiple script files
+var authToken = window.authToken;
 
 const BRT_OFFSET_HOURS = 3;
 const BRT_OFFSET_MS = BRT_OFFSET_HOURS * 60 * 60 * 1000;
@@ -63,6 +68,8 @@ class RechargeValidator {
             if (typeof getSession === 'function') {
                 const session = getSession();
                 if (session && session.token) {
+                    // REQ 3: Update both local and window authToken
+                    window.authToken = session.token;
                     authToken = session.token;
                 }
             }
@@ -74,6 +81,8 @@ class RechargeValidator {
 
     // REQ 3: Set auth token (called by auth.js after login)
     setAuthToken(token) {
+        // REQ 3: Update both local and window authToken
+        window.authToken = token;
         authToken = token;
     }
 
@@ -83,9 +92,10 @@ class RechargeValidator {
                 'Content-Type': 'application/json'
             };
             
-            // REQ 3: Add auth token for admin requests
-            if (authToken) {
-                headers['Authorization'] = `Bearer ${authToken}`;
+            // REQ 3: Add auth token for admin requests (check both local and window)
+            const token = authToken || window.authToken;
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
             }
             
             // REQ 3: Fetch from API endpoint instead of direct Google Sheets URL

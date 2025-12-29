@@ -11,6 +11,13 @@ if (typeof window.API_BASE_URL === 'undefined') {
 // REQ 3: Use var to allow redeclaration across multiple script files
 var API_BASE_URL = window.API_BASE_URL;
 
+// REQ 3: Share authToken across all admin scripts (avoid redeclaration error)
+if (typeof window.authToken === 'undefined') {
+    window.authToken = null;
+}
+// REQ 3: Use var to allow redeclaration across multiple script files
+var authToken = window.authToken;
+
 class ResultsFetcher {
     constructor() {
         this.results = [];
@@ -20,13 +27,14 @@ class ResultsFetcher {
         this.ensureAuthTokenInitialized();
     }
 
-    // REQ 2: Initialize token from session storage on load (fixes race condition)
+    // REQ 3: Initialize token from session storage on load (fixes race condition)
     ensureAuthTokenInitialized() {
         if (typeof getSession === 'function') {
             const session = getSession();
-            if (session && session.token && typeof authToken === 'undefined') {
-                // Set global authToken if not already set
+            if (session && session.token) {
+                // REQ 3: Update both local and window authToken
                 window.authToken = session.token;
+                authToken = session.token;
             }
         }
     }
@@ -40,9 +48,10 @@ class ResultsFetcher {
             // REQ 2: Ensure token is initialized before use
             this.ensureAuthTokenInitialized();
             
-            // Add auth token if available
-            if (authToken) {
-                headers['Authorization'] = `Bearer ${authToken}`;
+            // REQ 3: Add auth token if available (check both local and window)
+            const token = authToken || window.authToken;
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
             }
             
             const response = await fetch(`${API_BASE_URL}/api/admin/results`, {

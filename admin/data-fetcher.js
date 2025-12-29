@@ -12,8 +12,12 @@ if (typeof window.API_BASE_URL === 'undefined') {
 var API_BASE_URL = window.API_BASE_URL;
 
 // Session token (set after login)
-// REQ 2: Use global authToken to sync with auth.js, or initialize from session on load
-let authToken = null;
+// REQ 3: Share authToken across all admin scripts (avoid redeclaration error)
+if (typeof window.authToken === 'undefined') {
+    window.authToken = null;
+}
+// REQ 3: Use var to allow redeclaration across multiple script files
+var authToken = window.authToken;
 
 class DataFetcher {
     constructor() {
@@ -27,6 +31,8 @@ class DataFetcher {
             if (typeof getSession === 'function') {
                 const session = getSession();
                 if (session && session.token) {
+                    // REQ 3: Update both local and window authToken
+                    window.authToken = session.token;
                     authToken = session.token;
                 }
             }
@@ -37,6 +43,8 @@ class DataFetcher {
     }
 
     setAuthToken(token) {
+        // REQ 3: Update both local and window authToken
+        window.authToken = token;
         authToken = token;
     }
 
@@ -46,9 +54,10 @@ class DataFetcher {
                 'Content-Type': 'application/json'
             };
             
-            // Add auth token for admin requests
-            if (authToken) {
-                headers['Authorization'] = `Bearer ${authToken}`;
+            // REQ 3: Add auth token for admin requests (check both local and window)
+            const token = authToken || window.authToken;
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
             }
             
             // REQ 3: Use dynamic timestamp for cache-busting

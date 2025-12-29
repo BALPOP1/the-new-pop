@@ -80,6 +80,8 @@ function getSession() {
         
         // REQ 3: Set auth token for data fetchers and validators
         if (data.token) {
+            // REQ 3: Update both local and window authToken
+            window.authToken = data.token;
             authToken = data.token;
             if (typeof dataFetcher !== 'undefined') {
                 dataFetcher.setAuthToken(data.token);
@@ -101,6 +103,8 @@ function getSession() {
  */
 function clearSession() {
     sessionStorage.removeItem(AUTH_SESSION_KEY);
+    // REQ 3: Clear both local and window authToken
+    window.authToken = null;
     authToken = null;
 }
 
