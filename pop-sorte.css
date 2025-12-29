@@ -44,6 +44,8 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   opacity: 0.7;
   cursor: not-allowed !important;
   pointer-events: none;
+  /* REQ 1: Ensure container allows badge overflow */
+  overflow: visible;
 }
 
 .coming-soon-badge {
@@ -61,6 +63,8 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
   z-index: 10;
   white-space: nowrap;
+  /* REQ 1: Ensure badge is fully visible */
+  overflow: visible;
 }
 
 .floating-whatsapp-img {
@@ -696,12 +700,19 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 16px;
   padding: 14px;
+  /* REQ 1: Allow badge overflow to be visible */
+  overflow: visible;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
 }
 .prize-chip, .cta-button {
   min-height: 78px;
+  /* REQ 3: Ensure consistent button sizes */
+  height: 78px;
   display: inline-flex; align-items: center; gap: 10px;
   padding: 15px 20px; border-radius: 14px;
+  /* REQ 2: Prevent stretching */
+  flex-shrink: 0;
+  flex-grow: 0;
 }
 .cta-stack .prize-chip {
   grid-area: prize;
@@ -713,6 +724,13 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   width: 100%;
   max-width: none;
   justify-self: stretch;
+  /* REQ 2: Prevent horizontal stretching, use vertical scaling */
+  height: auto;
+  min-height: 78px;
+  max-height: none;
+  /* REQ 3: Ensure consistent button sizes */
+  flex-shrink: 0;
+  flex-grow: 0;
 }
 .cta-stack .cta-button.cta-1 { grid-area: cta1; }
 .cta-stack .cta-button.cta-2 { grid-area: cta2; }
@@ -1355,7 +1373,8 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   position: fixed;
   z-index: 2000;
   left: 50%;
-  bottom: 75px;
+  /* REQ 4: Move toast up to avoid overlapping with navigation container */
+  bottom: 90px;
   transform: translateX(-50%);
   font-size: 0.95rem;
   font-weight: 700;
