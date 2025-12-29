@@ -534,6 +534,11 @@ function initializePage(pageId) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize auth tokens for all fetchers
+    if (typeof initializeAuthTokens === 'function') {
+        initializeAuthTokens();
+    }
+    
     initDashboard();
     setupAutoRefresh();
     

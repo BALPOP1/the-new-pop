@@ -10,6 +10,15 @@ class ResultsFetcher {
     constructor() {
         this.results = [];
         this.lastFetchTime = null;
+        this.authToken = null;
+    }
+
+    /**
+     * Set the authentication token for API requests
+     * @param {string} token - Bearer token from login
+     */
+    setAuthToken(token) {
+        this.authToken = token;
     }
 
     async fetchResults() {
@@ -19,8 +28,8 @@ class ResultsFetcher {
             };
             
             // Add auth token if available
-            if (authToken) {
-                headers['Authorization'] = `Bearer ${authToken}`;
+            if (this.authToken) {
+                headers['Authorization'] = `Bearer ${this.authToken}`;
             }
             
             const response = await fetch(`${API_BASE_URL}/api/admin/results`, {
