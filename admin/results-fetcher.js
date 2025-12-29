@@ -1,10 +1,8 @@
 /**
  * SECURE RESULTS FETCHER
  * Fetches results via Cloudflare Worker (not direct from Sheet)
+ * Uses API_BASE_URL from auth.js
  */
-
-// ✅ WORKER URL FINAL
-const API_BASE_URL = 'https://popsorte-api.danilla-vargas1923.workers.dev';
 
 class ResultsFetcher {
     constructor() {

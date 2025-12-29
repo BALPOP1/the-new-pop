@@ -1,10 +1,8 @@
 /**
  * SECURE RECHARGE VALIDATOR
  * Fetches recharge data via Cloudflare Worker (not direct from Sheet)
+ * Uses API_BASE_URL from auth.js
  */
-
-// API endpoint for recharge data
-const RECHARGE_API_BASE_URL = 'https://popsorte-api.danilla-vargas1923.workers.dev';
 
 // Auth token for API requests
 let rechargeAuthToken = null;
@@ -72,7 +70,7 @@ class RechargeValidator {
                 headers['Authorization'] = `Bearer ${rechargeAuthToken}`;
             }
             
-            const response = await fetch(`${RECHARGE_API_BASE_URL}/api/admin/recharges`, {
+            const response = await fetch(`${API_BASE_URL}/api/admin/recharges`, {
                 method: 'GET',
                 headers: headers
             });

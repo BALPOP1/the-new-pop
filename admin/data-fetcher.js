@@ -1,13 +1,8 @@
 /**
  * SECURE DATA FETCHER
  * Fetches data via Cloudflare Worker (not direct from Sheet)
+ * Uses API_BASE_URL and authToken from auth.js
  */
-
-// ✅ WORKER URL FINAL
-const API_BASE_URL = 'https://popsorte-api.danilla-vargas1923.workers.dev';
-
-// Session token (set after login)
-let authToken = null;
 
 class DataFetcher {
     constructor() {
