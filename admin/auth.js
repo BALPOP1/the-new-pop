@@ -4,12 +4,7 @@
  */
 
 // ✅ WORKER URL FINAL
-// REQ 3: Share API_BASE_URL across all admin scripts (auth.js loads first, so it sets the global)
-if (typeof window.API_BASE_URL === 'undefined') {
-    window.API_BASE_URL = 'https://popsorte-api.danilla-vargas1923.workers.dev';
-}
-// REQ 3: Use var to allow redeclaration across multiple script files
-var API_BASE_URL = window.API_BASE_URL;
+const API_BASE_URL = 'https://popsorte-api.danilla-vargas1923.workers.dev';
 
 const AUTH_SESSION_KEY = 'ps_admin_session';
 const AUTH_SESSION_TTL_HOURS = 12;
@@ -36,11 +31,13 @@ async function loginAdmin(account, password) {
         // Save session
         setSession(data.account, data.token);
         
-        // REQ 3: Set auth token for data fetchers and validators
+        // Set auth token for data fetchers
         if (typeof dataFetcher !== 'undefined') {
             dataFetcher.setAuthToken(data.token);
         }
-        if (typeof rechargeValidator !== 'undefined') {
+        
+        // Set auth token for recharge validator
+        if (typeof rechargeValidator !== 'undefined' && rechargeValidator.setAuthToken) {
             rechargeValidator.setAuthToken(data.token);
         }
         
@@ -78,15 +75,14 @@ function getSession() {
             return null;
         }
         
-        // REQ 3: Set auth token for data fetchers and validators
+        // Set auth token for data fetchers
         if (data.token) {
-            // REQ 3: Update both local and window authToken
-            window.authToken = data.token;
             authToken = data.token;
             if (typeof dataFetcher !== 'undefined') {
                 dataFetcher.setAuthToken(data.token);
             }
-            if (typeof rechargeValidator !== 'undefined') {
+            // Set auth token for recharge validator
+            if (typeof rechargeValidator !== 'undefined' && rechargeValidator.setAuthToken) {
                 rechargeValidator.setAuthToken(data.token);
             }
         }
@@ -103,8 +99,6 @@ function getSession() {
  */
 function clearSession() {
     sessionStorage.removeItem(AUTH_SESSION_KEY);
-    // REQ 3: Clear both local and window authToken
-    window.authToken = null;
     authToken = null;
 }
 

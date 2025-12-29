@@ -4,7 +4,6 @@ let dashboardChartInstance = null;
 /**
  * DASHBOARD PAGE LOGIC
  */
-// REQ 2: Improved error handling with 401 redirect
 async function initDashboard() {
     showLoading(true);
     hideError();
@@ -19,15 +18,6 @@ async function initDashboard() {
         updateLastUpdateTime();
         setAccountBanner();
     } catch (error) {
-        // REQ 2: Redirect to login on 401 Unauthorized
-        if (error.message && error.message.includes('Unauthorized')) {
-            if (typeof logout === 'function') {
-                logout();
-            } else {
-                window.location.replace('/admin/login.html');
-            }
-            return;
-        }
         showError('Failed to load data: ' + error.message);
     } finally {
         showLoading(false);
@@ -422,8 +412,7 @@ function initResultsPage() {
     tbody.innerHTML = '';
     const res = validator.getAllResults();
     if (res.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Nenhum resultado encontrado</td></tr>'; return; }
-    // REQ 3: Updated badge to reflect API migration
-    res.forEach(r => { const row = tbody.insertRow(); row.innerHTML = `<td><span class="badge badge-primary">${r.contest}</span></td><td>${r.drawDate}</td><td><strong style="font-size:18px;color:#1e3c72;">${r.winningNumbers.join(', ')}</strong></td><td>${new Date(r.savedAt).toLocaleString('pt-BR')}</td><td><span class="badge badge-validated">API</span></td>`; });
+    res.forEach(r => { const row = tbody.insertRow(); row.innerHTML = `<td><span class="badge badge-primary">${r.contest}</span></td><td>${r.drawDate}</td><td><strong style="font-size:18px;color:#1e3c72;">${r.winningNumbers.join(', ')}</strong></td><td>${new Date(r.savedAt).toLocaleString('pt-BR')}</td><td><span class="badge badge-validated">RESULT Sheet</span></td>`; });
 }
 
 /**
@@ -544,15 +533,7 @@ function initializePage(pageId) {
     }
 }
 
-// REQ 2: Ensure all dependencies are loaded before initialization
 document.addEventListener('DOMContentLoaded', () => {
-    // REQ 2: Safety check - ensure dataFetcher is available
-    if (typeof dataFetcher === 'undefined') {
-        console.error('dataFetcher is not defined. Check script loading order.');
-        showError('Failed to initialize: dataFetcher is not defined. Please refresh the page.');
-        return;
-    }
-    
     initDashboard();
     setupAutoRefresh();
     

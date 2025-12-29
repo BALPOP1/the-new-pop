@@ -39,13 +39,11 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
 
 .cta-popluz { background: linear-gradient(135deg, #0ea5e9, #0369a1); }
 
-/* REQ 1: Allow coming-soon-badge to be visible outside its container */
 .coming-soon-btn {
   position: relative;
   opacity: 0.7;
   cursor: not-allowed !important;
   pointer-events: none;
-  overflow: visible; /* REQ 1: Override parent overflow:hidden to show badge outside container */
 }
 
 .coming-soon-badge {
@@ -683,7 +681,6 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
 .brand-sub { font-size: 0.98rem; font-weight: 700; letter-spacing: 0.01em; color: #e2e8f0; }
 
 /* CTA STACK: grid layout (prize row + two CTAs) */
-/* REQ 1: Ensure parent container allows badge overflow */
 .cta-stack {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -699,7 +696,6 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 16px;
   padding: 14px;
-  overflow: visible; /* REQ 1: Allow coming-soon-badge to overflow outside container */
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
 }
 .prize-chip, .cta-button {
@@ -1631,11 +1627,6 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   );
   background-size: 200% 100%;
   animation: ctaColorSlide 3s linear infinite;
-}
-
-/* REQ 1: Override overflow:hidden for coming-soon-btn to allow badge visibility outside container */
-.cta-button.coming-soon-btn {
-  overflow: visible !important; /* REQ 1: Force visible overflow to show badge outside button boundaries */
 }
 
 @keyframes ctaColorSlide {

@@ -3,21 +3,11 @@
  * Fetches recharge data via Cloudflare Worker (not direct from Sheet)
  */
 
-// REQ 3: API endpoint for recharge data
-// REQ 3: Share API_BASE_URL across all admin scripts (avoid redeclaration error)
-if (typeof window.API_BASE_URL === 'undefined') {
-    window.API_BASE_URL = 'https://popsorte-api.danilla-vargas1923.workers.dev';
-}
-// REQ 3: Use var to allow redeclaration across multiple script files
-var API_BASE_URL = window.API_BASE_URL;
+// API endpoint for recharge data
+const RECHARGE_API_BASE_URL = 'https://popsorte-api.danilla-vargas1923.workers.dev';
 
-// REQ 3: Session token (set after login)
-// REQ 3: Share authToken across all admin scripts (avoid redeclaration error)
-if (typeof window.authToken === 'undefined') {
-    window.authToken = null;
-}
-// REQ 3: Use var to allow redeclaration across multiple script files
-var authToken = window.authToken;
+// Auth token for API requests
+let rechargeAuthToken = null;
 
 const BRT_OFFSET_HOURS = 3;
 const BRT_OFFSET_MS = BRT_OFFSET_HOURS * 60 * 60 * 1000;
@@ -57,49 +47,32 @@ class RechargeValidator {
             '12-25', // Dec 25
             '01-01'  // Jan 1
         ];
-        
-        // REQ 3: Initialize token from session if available
-        this.initializeTokenFromSession();
     }
 
-    // REQ 3: Initialize token from session storage on load
-    initializeTokenFromSession() {
-        try {
-            if (typeof getSession === 'function') {
-                const session = getSession();
-                if (session && session.token) {
-                    // REQ 3: Update both local and window authToken
-                    window.authToken = session.token;
-                    authToken = session.token;
-                }
-            }
-        } catch (error) {
-            // REQ 3: Don't let initialization errors prevent validator from being created
-            console.warn('Could not initialize token from session:', error);
-        }
-    }
-
-    // REQ 3: Set auth token (called by auth.js after login)
+    /**
+     * Set the authentication token for API requests
+     * @param {string} token - Bearer token from login
+     */
     setAuthToken(token) {
-        // REQ 3: Update both local and window authToken
-        window.authToken = token;
-        authToken = token;
+        rechargeAuthToken = token;
     }
 
+    /**
+     * Fetch recharge data from the API
+     * @returns {Promise<Array>} Array of recharge records
+     */
     async fetchRechargeData() {
         try {
             const headers = {
                 'Content-Type': 'application/json'
             };
             
-            // REQ 3: Add auth token for admin requests (check both local and window)
-            const token = authToken || window.authToken;
-            if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
+            // Add auth token for admin requests
+            if (rechargeAuthToken) {
+                headers['Authorization'] = `Bearer ${rechargeAuthToken}`;
             }
             
-            // REQ 3: Fetch from API endpoint instead of direct Google Sheets URL
-            const response = await fetch(`${API_BASE_URL}/api/admin/recharges`, {
+            const response = await fetch(`${RECHARGE_API_BASE_URL}/api/admin/recharges`, {
                 method: 'GET',
                 headers: headers
             });

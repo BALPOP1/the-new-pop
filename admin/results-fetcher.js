@@ -4,39 +4,12 @@
  */
 
 // ✅ WORKER URL FINAL
-// REQ 3: Share API_BASE_URL across all admin scripts (avoid redeclaration error)
-if (typeof window.API_BASE_URL === 'undefined') {
-    window.API_BASE_URL = 'https://popsorte-api.danilla-vargas1923.workers.dev';
-}
-// REQ 3: Use var to allow redeclaration across multiple script files
-var API_BASE_URL = window.API_BASE_URL;
-
-// REQ 3: Share authToken across all admin scripts (avoid redeclaration error)
-if (typeof window.authToken === 'undefined') {
-    window.authToken = null;
-}
-// REQ 3: Use var to allow redeclaration across multiple script files
-var authToken = window.authToken;
+const API_BASE_URL = 'https://popsorte-api.danilla-vargas1923.workers.dev';
 
 class ResultsFetcher {
     constructor() {
         this.results = [];
         this.lastFetchTime = null;
-        
-        // REQ 2: Ensure authToken is initialized from session if available
-        this.ensureAuthTokenInitialized();
-    }
-
-    // REQ 3: Initialize token from session storage on load (fixes race condition)
-    ensureAuthTokenInitialized() {
-        if (typeof getSession === 'function') {
-            const session = getSession();
-            if (session && session.token) {
-                // REQ 3: Update both local and window authToken
-                window.authToken = session.token;
-                authToken = session.token;
-            }
-        }
     }
 
     async fetchResults() {
@@ -45,13 +18,9 @@ class ResultsFetcher {
                 'Content-Type': 'application/json'
             };
             
-            // REQ 2: Ensure token is initialized before use
-            this.ensureAuthTokenInitialized();
-            
-            // REQ 3: Add auth token if available (check both local and window)
-            const token = authToken || window.authToken;
-            if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
+            // Add auth token if available
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
             }
             
             const response = await fetch(`${API_BASE_URL}/api/admin/results`, {

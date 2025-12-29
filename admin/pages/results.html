@@ -108,8 +108,7 @@
             const results = validator.getAllResults();
             
             if (results.length === 0) {
-                // REQ 3: Updated text to reflect API migration
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhum resultado encontrado</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhum resultado encontrado no Google Sheet</td></tr>';
                 return;
             }
             
@@ -120,8 +119,7 @@
                     <td>${result.drawDate}</td>
                     <td><strong style="font-size: 18px; color: #1e3c72;">${result.winningNumbers.join(', ')}</strong></td>
                     <td>${new Date(result.savedAt).toLocaleString('pt-BR')}</td>
-                    <!-- REQ 3: Updated badge to reflect API migration -->
-                    <td><span class="badge badge-validated">API</span></td>
+                    <td><span class="badge badge-validated">RESULT Sheet</span></td>
                 `;
             });
         }
