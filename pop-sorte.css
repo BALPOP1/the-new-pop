@@ -694,6 +694,7 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   gap: 12px;
   align-items: center;
   justify-items: center;
+  /* REQ 5: Match original min-height */
   min-height: 78px;
   width: 100%;
   background: rgba(255, 255, 255, 0.04);
@@ -705,14 +706,10 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
 }
 .prize-chip, .cta-button {
+  /* REQ 5: Use min-height instead of fixed height to match original */
   min-height: 78px;
-  /* REQ 3: Ensure consistent button sizes */
-  height: 78px;
   display: inline-flex; align-items: center; gap: 10px;
   padding: 15px 20px; border-radius: 14px;
-  /* REQ 2: Prevent stretching */
-  flex-shrink: 0;
-  flex-grow: 0;
 }
 .cta-stack .prize-chip {
   grid-area: prize;
@@ -724,13 +721,8 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   width: 100%;
   max-width: none;
   justify-self: stretch;
-  /* REQ 2: Prevent horizontal stretching, use vertical scaling */
-  height: auto;
+  /* REQ 5: Use min-height to match original, allow natural height */
   min-height: 78px;
-  max-height: none;
-  /* REQ 3: Ensure consistent button sizes */
-  flex-shrink: 0;
-  flex-grow: 0;
 }
 .cta-stack .cta-button.cta-1 { grid-area: cta1; }
 .cta-stack .cta-button.cta-2 { grid-area: cta2; }
