@@ -422,7 +422,8 @@ function initResultsPage() {
     tbody.innerHTML = '';
     const res = validator.getAllResults();
     if (res.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Nenhum resultado encontrado</td></tr>'; return; }
-    res.forEach(r => { const row = tbody.insertRow(); row.innerHTML = `<td><span class="badge badge-primary">${r.contest}</span></td><td>${r.drawDate}</td><td><strong style="font-size:18px;color:#1e3c72;">${r.winningNumbers.join(', ')}</strong></td><td>${new Date(r.savedAt).toLocaleString('pt-BR')}</td><td><span class="badge badge-validated">RESULT Sheet</span></td>`; });
+    // REQ 3: Updated badge to reflect API migration
+    res.forEach(r => { const row = tbody.insertRow(); row.innerHTML = `<td><span class="badge badge-primary">${r.contest}</span></td><td>${r.drawDate}</td><td><strong style="font-size:18px;color:#1e3c72;">${r.winningNumbers.join(', ')}</strong></td><td>${new Date(r.savedAt).toLocaleString('pt-BR')}</td><td><span class="badge badge-validated">API</span></td>`; });
 }
 
 /**

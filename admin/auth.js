@@ -31,9 +31,12 @@ async function loginAdmin(account, password) {
         // Save session
         setSession(data.account, data.token);
         
-        // Set auth token for data fetchers
+        // REQ 3: Set auth token for data fetchers and validators
         if (typeof dataFetcher !== 'undefined') {
             dataFetcher.setAuthToken(data.token);
+        }
+        if (typeof rechargeValidator !== 'undefined') {
+            rechargeValidator.setAuthToken(data.token);
         }
         
         return data;
@@ -70,11 +73,14 @@ function getSession() {
             return null;
         }
         
-        // Set auth token for data fetchers
+        // REQ 3: Set auth token for data fetchers and validators
         if (data.token) {
             authToken = data.token;
             if (typeof dataFetcher !== 'undefined') {
                 dataFetcher.setAuthToken(data.token);
+            }
+            if (typeof rechargeValidator !== 'undefined') {
+                rechargeValidator.setAuthToken(data.token);
             }
         }
         

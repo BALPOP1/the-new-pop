@@ -1,5 +1,13 @@
-// REQ 3: Migrated from direct Google Sheets URL to API endpoint
+/**
+ * SECURE RECHARGE VALIDATOR
+ * Fetches recharge data via Cloudflare Worker (not direct from Sheet)
+ */
+
+// REQ 3: API endpoint for recharge data
 const API_BASE_URL = 'https://popsorte-api.danilla-vargas1923.workers.dev';
+
+// REQ 3: Session token (set after login)
+let authToken = null;
 
 const BRT_OFFSET_HOURS = 3;
 const BRT_OFFSET_MS = BRT_OFFSET_HOURS * 60 * 60 * 1000;
@@ -40,38 +48,42 @@ class RechargeValidator {
             '01-01'  // Jan 1
         ];
         
-        // REQ 3: Initialize token from session if available (fixes race condition)
+        // REQ 3: Initialize token from session if available
         this.initializeTokenFromSession();
     }
-    
+
     // REQ 3: Initialize token from session storage on load
     initializeTokenFromSession() {
         try {
             if (typeof getSession === 'function') {
                 const session = getSession();
-                if (session && session.token && typeof authToken === 'undefined') {
-                    // Set global authToken if not already set
-                    window.authToken = session.token;
+                if (session && session.token) {
+                    authToken = session.token;
                 }
             }
         } catch (error) {
-            console.warn('REQ 3: Could not initialize token from session:', error);
+            // REQ 3: Don't let initialization errors prevent validator from being created
+            console.warn('Could not initialize token from session:', error);
         }
     }
 
-    // REQ 3: Fetch recharge data via API instead of direct Google Sheets access
+    // REQ 3: Set auth token (called by auth.js after login)
+    setAuthToken(token) {
+        authToken = token;
+    }
+
     async fetchRechargeData() {
         try {
             const headers = {
                 'Content-Type': 'application/json'
             };
             
-            // REQ 3: Add auth token if available (for admin requests)
-            if (typeof authToken !== 'undefined' && authToken) {
+            // REQ 3: Add auth token for admin requests
+            if (authToken) {
                 headers['Authorization'] = `Bearer ${authToken}`;
             }
             
-            // REQ 3: Use API endpoint instead of direct Google Sheets URL
+            // REQ 3: Fetch from API endpoint instead of direct Google Sheets URL
             const response = await fetch(`${API_BASE_URL}/api/admin/recharges`, {
                 method: 'GET',
                 headers: headers
@@ -89,7 +101,7 @@ class RechargeValidator {
             this.lastFetchTime = new Date();
             return this.recharges;
         } catch (error) {
-            console.error('REQ 3: Error fetching recharge data:', error);
+            console.error('Error fetching recharge data:', error);
             throw error;
         }
     }
