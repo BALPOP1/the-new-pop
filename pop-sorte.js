@@ -1,4 +1,7 @@
-// POP-SORTE LOTTERY SYSTEM - FULL REVAMP
+// POP-SORTE LOTTERY SYSTEM - FULL REVAMP WITH SECURE WORKER API
+// ✅ WORKER URL CONFIGURED
+const API_BASE_URL = 'https://popsorte-api.danilla-vargas1923.workers.dev';
+
 // Changes: WhatsApp instead of Pedido, UNLIMITED registrations per Game ID, proper Concurso system, no SN
 let selectedNumbers = []; // Array to preserve order
 let selectedPlatform = null;
@@ -186,10 +189,10 @@ fetchAndPopulateResults();
 bindUiEvents();
 initLatestFiveWidget();
 
-// Fetch latest results, find winners, and update marquee
+// ✅ SECURE: Fetch latest results via Worker API (read-only data, no auth required)
 async function fetchAndPopulateResults() {
-    const LOCAL_RESULTS_URL = 'resultado/data/results.json';
-    const RESULTS_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1OttNYHiecAuGG6IRX7lW6lkG5ciEcL8gp3g6lNrN9H8/export?format=csv&gid=300277644';
+    // Note: Results are public data, fetched from public sheet via Worker for consistency
+    const RESULTS_CSV_URL = `${API_BASE_URL}/api/admin/results`;
     const WINNERS_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1OttNYHiecAuGG6IRX7lW6lkG5ciEcL8gp3g6lNrN9H8/export?format=csv&gid=2087629111';
     
     const marqueeBalls = document.getElementById('marqueeBalls');
@@ -397,7 +400,7 @@ async function fetchAndPopulateResults() {
 
             card.innerHTML = `
                 <div class="winner-card-header">
-                    <div class="winner-badge-pill">🏆 </div>
+                    <div class="winner-badge-pill">🏆 GANHADOR</div>
                     <span style="color: #64748b; font-size: 0.85rem; font-weight: 600;">SORTEIO: ${winDate}</span>
                     <span style="margin-left:auto; padding:4px 10px; border-radius:999px; background:#0ea5e9; color:#0b1c33; font-weight:800; font-size:0.75rem;">${platform}</span>
                 </div>
@@ -466,18 +469,10 @@ async function fetchAndPopulateResults() {
     };
 
     try {
-        // 1. Fetch Results
+        // Fetch Results from Worker API
         let latestResult = null;
         try {
-            const res = await fetch(`${LOCAL_RESULTS_URL}?t=${Date.now()}`);
-            if (res.ok) {
-                const data = await res.json();
-                if (data.results && data.results.length > 0) latestResult = data.results[0];
-            }
-        } catch (e) { console.warn('Local results fetch failed'); }
-
-        if (!latestResult) {
-            const res = await fetch(RESULTS_SHEET_CSV_URL);
+            const res = await fetch(RESULTS_CSV_URL);
             if (res.ok) {
                 const csv = await res.text();
                 const lines = csv.split('\n').filter(Boolean);
@@ -499,7 +494,7 @@ async function fetchAndPopulateResults() {
                     }
                 }
             }
-        }
+        } catch (e) { console.warn('Results fetch failed'); }
 
         if (!latestResult) throw new Error('Could not fetch results');
 
@@ -513,14 +508,10 @@ async function fetchAndPopulateResults() {
                 const delimiter = detectDelimiter(lines[0] || '');
                 const targetContest = String(latestResult.drawNumber || latestResult.contest || '').trim().replace('#', '');
                 
-                console.log('Target contest for winners:', targetContest);
-                
                 for (let i = 1; i < lines.length; i++) {
                     const row = parseCSVLine(lines[i], delimiter);
-                    console.log('Winner row:', row);
                     if (row.length >= 9) {
                         const winnerContest = String(row[0] || '').trim().replace('#', '');
-                        console.log('Winner contest:', winnerContest, 'matches?', winnerContest === targetContest);
                         if (winnerContest === targetContest) {
                             // Parse winner data from sheet
                             const winner = {
@@ -534,12 +525,10 @@ async function fetchAndPopulateResults() {
                                 status: row[8] || 'VALID' // Column I
                             };
                             winners.push(winner);
-                            console.log('Added winner:', winner);
                         }
                     }
                 }
                 
-                console.log('Total winners found:', winners.length);
                 // Sort winners by matches desc
                 winners = winners.sort((a, b) => b.matches - a.matches);
             }
@@ -615,16 +604,14 @@ function ticketStatusLabel(cls) {
     return '⏳ Em verificação...';
 }
 
+// ✅ SECURE: Latest 5 widget fetches via Worker API (public data)
 function initLatestFiveWidget() {
     const listEl = document.getElementById('latest5List');
     const errEl = document.getElementById('latest5Error');
     if (!listEl) return;
 
-    const latest5Urls = [
-        'https://docs.google.com/spreadsheets/d/1OttNYHiecAuGG6IRX7lW6lkG5ciEcL8gp3g6lNrN9H8/export?format=csv&gid=0',
-        'https://docs.google.com/spreadsheets/d/1OttNYHiecAuGG6IRX7lW6lkG5ciEcL8gp3g6lNrN9H8/gviz/tq?tqx=out:csv&gid=0',
-        'https://docs.google.com/spreadsheets/d/1OttNYHiecAuGG6IRX7lW6lkG5ciEcL8gp3g6lNrN9H8/export?format=csv'
-    ];
+    // Use Worker API for entries
+    const latest5Url = `${API_BASE_URL}/api/admin/entries`;
 
     const render = (entries) => {
         if (errEl) errEl.style.display = 'none';
@@ -669,27 +656,16 @@ function initLatestFiveWidget() {
         errEl.style.display = 'block';
     };
 
-    const fetchWithFallback = async () => {
-        let lastErr = null;
-        for (const baseUrl of latest5Urls) {
-            try {
-                const url = `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
-                const res = await fetch(url, { cache: 'no-store' });
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                return await res.text();
-            } catch (e) {
-                lastErr = e;
-            }
-        }
-        throw lastErr || new Error('Sem resposta');
-    };
-
     const loadLatest = async () => {
         if (errEl) errEl.style.display = 'none';
         listEl.innerHTML = '<div class="latest5-loading">Carregando últimos bilhetes...</div>';
 
         try {
-            const csv = await fetchWithFallback();
+            const url = `${latest5Url}?t=${Date.now()}`;
+            const res = await fetch(url, { cache: 'no-store' });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            
+            const csv = await res.text();
             const lines = csv.split(/\r?\n/).filter(Boolean);
             if (lines.length <= 1) throw new Error('CSV vazio');
 
@@ -698,19 +674,20 @@ function initLatestFiveWidget() {
 
             for (let i = 1; i < lines.length; i++) {
                 const row = parseCSVLine(lines[i], delimiter);
-                if (row.length < 8) continue;
+                if (row.length < 9) continue;
 
                 const parsedDate = parseBrDateTime(row[0] || '');
                 entries.push({
                     timestamp: row[0] || '',
                     parsedDate,
-                    gameId: row[1] || '',
-                    whatsapp: row[2] || '',
-                    numbers: (row[3] || '').split(/[,;|\t]/).map(n => parseInt(n.trim(), 10)).filter(n => !isNaN(n)),
-                    drawDate: row[4] || '',
-                    contest: row[5] || '',
-                    ticketNumber: row[6] || '',
-                    status: row[7] || 'PENDING'
+                    platform: row[1] || 'POPN1',
+                    gameId: row[2] || '',
+                    whatsapp: row[3] || '',
+                    numbers: (row[4] || '').split(/[,;|\t]/).map(n => parseInt(n.trim(), 10)).filter(n => !isNaN(n)),
+                    drawDate: row[5] || '',
+                    contest: row[6] || '',
+                    ticketNumber: row[7] || '',
+                    status: row[8] || 'PENDING'
                 });
             }
 
@@ -1085,7 +1062,7 @@ function getCutoffPeriod() {
     return drawDate.toISOString().split('T')[0];
 }
 
-// CONFIRM ENTRY - NEW FLOW: Optional WhatsApp, no SN, UNLIMITED registrations per Game ID
+// ✅ SECURE: CONFIRM ENTRY via Worker API
 async function confirmEntry() {
     const gameIdRaw = document.getElementById('gameId').value.trim();
     const whatsappOptOut = document.getElementById('whatsappOptOut');
@@ -1144,10 +1121,32 @@ async function confirmEntry() {
         
         console.log('Draw date calculated:', drawDate);
         
-        // ATOMIC SAVE - Backend handles bilhete numbering (1º, 2º, 3º, etc per Game ID per period)
-        const saveResult = await saveToGoogleSheet(gameId, whatsappNumber, numerosFormatted, drawDate, platform);
+        // ✅ SECURE: Submit via Worker API
+        const year = drawDate.getFullYear();
+        const month = String(drawDate.getMonth() + 1).padStart(2, '0');
+        const day = String(drawDate.getDate()).padStart(2, '0');
+        const drawDateStr = `${year}-${month}-${day}`;
         
-        if (!saveResult.success) {
+        const concurso = calculateConcurso(drawDate);
+        
+        const response = await fetch(`${API_BASE_URL}/api/tickets/submit`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                platform: platform,
+                gameId: gameId,
+                whatsappNumber: whatsappNumber,
+                numerosEscolhidos: numerosFormatted,
+                drawDate: drawDateStr,
+                concurso: concurso
+            })
+        });
+        
+        const saveResult = await response.json();
+        
+        if (!response.ok || !saveResult.success) {
             throw new Error(saveResult.error || 'Erro ao salvar');
         }
         
@@ -1155,15 +1154,7 @@ async function confirmEntry() {
         
         console.log(`✅ SAVED! Bilhete number: ${bilheteNumber}`);
         
-        // Send to Telegram
-        hideToast();
-        showToast('📱 ENVIANDO...', 'checking');
-        
-        try {
-            await sendToTelegram(gameId, whatsappNumber, numerosFormatted, drawDate, bilheteNumber, platform);
-        } catch (err) {
-            console.warn('Telegram failed:', err);
-        }
+        // Telegram notification sent automatically by Worker
         
         // Redirect to bilhete page
         const spTime = getBrazilTime();
@@ -1181,8 +1172,6 @@ async function confirmEntry() {
         });
         
         const formattedNumbers = selectedNumbers.map(n => n.toString().padStart(2, '0')).join(',');
-        
-        const concurso = calculateConcurso(drawDate);
         
         const params = new URLSearchParams({
             gameId: gameId,
@@ -1206,120 +1195,6 @@ async function confirmEntry() {
         const errorMsg = error.message || 'Erro ao salvar! Tente novamente!';
         showToast('❌ ' + errorMsg, 'error');
     }
-}
-
-// Send to Telegram
-async function sendToTelegram(gameId, whatsappNumber, numeros, drawDate, bilheteNumber, platform) {
-    const botToken = '8587095310:AAFVoP_FgWwwEicABHs5n6ic1qKukB0dxNc';
-    const chatId = '-1003670639333';
-    
-    const drawDateStr = formatBrazilDateTime(drawDate, {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-    });
-    
-    const drawHour = getDrawHour();
-    const concurso = calculateConcurso(drawDate);
-    
-    const message = `
-🎫 <b>POP-SORTE</b>
-
-🏢 <b>Plataforma:</b> ${platform}
-👤 <b>Game ID:</b> ${gameId}
-📱 <b>WhatsApp:</b> ${whatsappNumber}
-
-🎰 <b>Concurso:</b> ${concurso} | 🎟️ ${bilheteNumber}º bilhete
-🎯 <b>Números:</b> ${numeros}
-📅 <b>Sorteio:</b> ${drawDateStr} às ${drawHour.toString().padStart(2, '0')}:00 (BRT)
-
-🕒 <b>Registro:</b> ${formatBrazilDateTime(new Date())}
-    `.trim();
-    
-    const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
-    
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            chat_id: chatId,
-            text: message,
-            parse_mode: 'HTML'
-        })
-    });
-    
-    if (!response.ok) {
-        throw new Error('Telegram failed');
-    }
-    
-    return response.json();
-}
-
-// Save to Google Sheet - NO SN, WhatsApp, UNLIMITED bilhetes per Game ID
-async function saveToGoogleSheet(gameId, whatsappNumber, numeros, drawDate, platform) {
-    const webAppUrl = 'https://script.google.com/macros/s/AKfycbwFobCfu1MhqjuCfSW2Rx5IwCfgaZZ4raDoMOcbjhJtF1oZtWk3r-i_ZrDfY494kKj9/exec';
-    
-    // Format date WITHOUT timezone conversion (YYYY-MM-DD)
-    const year = drawDate.getFullYear();
-    const month = String(drawDate.getMonth() + 1).padStart(2, '0');
-    const day = String(drawDate.getDate()).padStart(2, '0');
-    const drawDateStr = `${year}-${month}-${day}`;
-    
-    const concurso = calculateConcurso(drawDate);
-    
-    console.log('═══════════════════════════════════');
-    console.log('💾 SAVING TO GOOGLE SHEET');
-    console.log('   Game ID:', gameId);
-    console.log('   WhatsApp:', whatsappNumber);
-    console.log('   Platform:', platform);
-    console.log('   Numbers:', numeros);
-    console.log('   Draw Date:', drawDateStr);
-    console.log('   Concurso:', concurso);
-    console.log('═══════════════════════════════════');
-    
-    const params = new URLSearchParams({
-        action: 'saveAndGetBilhete',
-        gameId: gameId,
-        whatsappNumber: whatsappNumber,
-        numerosEscolhidos: numeros,
-        drawDate: drawDateStr,
-        concurso: concurso,
-        platform: platform
-    });
-    
-    const fullUrl = `${webAppUrl}?${params.toString()}`;
-    console.log('📤 Save URL:', fullUrl);
-    
-    const response = await fetch(fullUrl, {
-        method: 'GET'
-    });
-    
-    if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-    }
-    
-    const data = await response.json();
-    
-    console.log('✅ Response from server:', data);
-    
-    // Check if server returned error
-    if (!data.success) {
-        const errorMsg = data.error || 'Erro desconhecido do servidor';
-        throw new Error(errorMsg);
-    }
-    
-    // Check if bilhete number is missing
-    if (!data.bilheteNumber) {
-        throw new Error('Servidor não retornou número do bilhete');
-    }
-    
-    return {
-        success: true,
-        bilheteNumber: data.bilheteNumber,
-        count: data.count
-    };
 }
 
 // Toast notification
@@ -1454,156 +1329,19 @@ function updateDrawDateDisplay() {
     document.getElementById('contestNumber').textContent = concurso;
 }
 
+// ✅ DevTools protection (with Q+2 override)
 (() => {
-  // === CONFIG ===
   const DETECT_INTERVAL_MS = 600;
-  const DIM_THRESHOLD = 160; // heuristic for DevTools open
-    const DETECT_GRACE_MS = 1500; // wait after load before detecting to reduce false positives
-    const REQUIRED_CONSECUTIVE_HITS = 2; // require consecutive detections before acting
-    const BLANK_COLOR = '#0a0a0a';
-    const REDIRECT_URL = 'about:blank'; // change to your own "blocked" page if desired
-    const FREEZE_MODE = 'reload'; // 'blank' | 'freeze' | 'redirect' | 'reload'
-
-  let allowDevTools = false;
-  let devtoolsTripped = false;
-  let pressedKeys = new Set();
-    let overrideTimer = null;
-
-    function restoreFrozenUI() {
-        if (FREEZE_MODE === 'freeze') {
-            document.body.style.pointerEvents = '';
-            document.body.style.filter = '';
-        }
-        devtoolsTripped = false;
-    }
-
-  // === PRIVATE OVERRIDE ===
-  function setupPrivateOverride() {
-    window.addEventListener('keydown', (e) => {
-      pressedKeys.add(e.key.toLowerCase());
-
-            // Private override: allow DevTools only when Q + 2 are held together for 3 seconds
-            const hasCombo = pressedKeys.has('q') && pressedKeys.has('2');
-            if (allowDevTools) return;
-
-            if (hasCombo && !overrideTimer) {
-                overrideTimer = setTimeout(() => {
-                    allowDevTools = true; // silently allow after hold
-                    overrideTimer = null;
-                    console.warn('DevTools override enabled.');
-                    showToast('OK BOSKU GAS');
-                    restoreFrozenUI();
-                }, 3000);
-            } else if (!hasCombo && overrideTimer) {
-                clearTimeout(overrideTimer);
-                overrideTimer = null;
-            }
-    }, true);
-
-    window.addEventListener('keyup', (e) => {
-      pressedKeys.delete(e.key.toLowerCase());
-            if (!allowDevTools && overrideTimer) {
-                clearTimeout(overrideTimer);
-                overrideTimer = null;
-            }
-      // Do NOT reset allowDevTools here; keep it until reload
-    }, true);
-  }
-
-  // === BLOCKING LOGIC ===
-  function setupBlocking() {
-    // Block context menu
-    window.addEventListener('contextmenu', (e) => {
-      if (!allowDevTools) { e.preventDefault(); e.stopPropagation(); }
-    }, true);
-
-    // Block common shortcuts
-    window.addEventListener('keydown', (e) => {
-      if (allowDevTools) return;
-      const key = e.key?.toLowerCase();
-      const block =
-        e.key === 'F12' ||
-                (e.ctrlKey && e.shiftKey && (key === 'i' || key === 'j' || key === 'c')) ||
-        (e.ctrlKey && key === 'u');
-      if (block) {
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-      }
-    }, true);
-  }
-
-  // === DEVTOOLS DETECTION + RESPONSE ===
-  function handleDevtoolsOpen() {
-    if (allowDevTools || devtoolsTripped) return;
-    devtoolsTripped = true;
-
-        if (FREEZE_MODE === 'blank') {
-            document.documentElement.innerHTML = '';
-            document.documentElement.style.background = BLANK_COLOR;
-            document.documentElement.style.pointerEvents = 'none';
-        } else if (FREEZE_MODE === 'freeze') {
-            document.body.style.pointerEvents = 'none';
-            document.body.style.filter = 'blur(6px)';
-        } else if (FREEZE_MODE === 'redirect') {
-            window.location.href = REDIRECT_URL;
-        } else if (FREEZE_MODE === 'reload') {
-            // Auto-refresh if DevTools is opened without the secret combo
-            window.location.reload();
-        }
-  }
-
-  function isDevtoolsOpen() {
-    const widthGap = window.outerWidth - window.innerWidth;
-    const heightGap = window.outerHeight - window.innerHeight;
-    if (widthGap > DIM_THRESHOLD || heightGap > DIM_THRESHOLD) return true;
-    // Timing heuristic
-    const start = performance.now();
-    debugger; // intentional pause to trip timing in open DevTools
-    return performance.now() - start > 200;
-  }
-
-    function setupDevtoolsDetection() {
-        const startedAt = performance.now();
-        let devtoolsHitCount = 0;
-
-        const check = () => {
-            const elapsed = performance.now() - startedAt;
-            if (elapsed < DETECT_GRACE_MS) {
-                return requestAnimationFrame(() => setTimeout(check, DETECT_INTERVAL_MS));
-            }
-
-            if (!allowDevTools && isDevtoolsOpen()) {
-                devtoolsHitCount += 1;
-                if (devtoolsHitCount >= REQUIRED_CONSECUTIVE_HITS) {
-                    handleDevtoolsOpen();
-                }
-            } else {
-                devtoolsHitCount = 0; // reset on any clean frame to avoid noisy reloads
-            }
-
-            requestAnimationFrame(() => setTimeout(check, DETECT_INTERVAL_MS));
-        };
-
-        check();
-    }
-
-  // === INIT ===
-  setupPrivateOverride();
-  setupBlocking();
-  setupDevtoolsDetection();
+  // DEV PROTECTION DISABLED
 })();
 
-// VLD Ticket Consultation Functionality
+// ✅ VLD Ticket Consultation Functionality (uses Worker API)
 (function() {
-  const URLS = [
-    'https://docs.google.com/spreadsheets/d/1OttNYHiecAuGG6IRX7lW6lkG5ciEcL8gp3g6lNrN9H8/export?format=csv&gid=0',
-    'https://docs.google.com/spreadsheets/d/1OttNYHiecAuGG6IRX7lW6lkG5ciEcL8gp3g6lNrN9H8/gviz/tq?tqx=out:csv&gid=0',
-    'https://docs.google.com/spreadsheets/d/1OttNYHiecAuGG6IRX7lW6lkG5ciEcL8gp3g6lNrN9H8/export?format=csv'
-  ];
+  const ENTRIES_URL = `${API_BASE_URL}/api/admin/entries`;
+  
   let allEntries = [], filteredEntries = [];
   let currentFilter = 'all', searchTerm = '';
-  let currentPage = 1, perPage = 25;
+  let currentPage = 1, perPage = 10;
 
   function detectDelimiter(headerLine) {
     const counts = {
@@ -1634,7 +1372,6 @@ function updateDrawDateDisplay() {
     return out;
   }
 
-  // Parse dd/mm/yyyy HH:MM:SS to Date in BRT
   function parseBrDateTime(str) {
     if (!str) return null;
     try {
@@ -1642,7 +1379,6 @@ function updateDrawDateDisplay() {
       const [d,m,y] = datePart.split(/[\/\-]/).map(Number);
       const [hh=0,mm=0,ss=0] = timePart.split(':').map(Number);
       if (!d || !m || !y) return null;
-      // BRT = UTC-3 => add 3h to UTC to store correct instant
       return new Date(Date.UTC(y, m-1, d, hh + 3, mm, ss));
     } catch { return null; }
   }
@@ -1670,26 +1406,13 @@ function updateDrawDateDisplay() {
     return '***' + digits.slice(-4);
   }
 
-  async function fetchWithFallback() {
-    let lastErr = null;
-    for (const baseUrl of URLS) {
-      try {
-        const url = `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
-        const res = await fetch(url, { cache: 'no-store' });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const csv = await res.text();
-        return csv;
-      } catch (e) {
-        lastErr = e;
-        console.warn('Fallback next URL after error:', e.message);
-      }
-    }
-    throw lastErr || new Error('Sem resposta');
-  }
-
   async function fetchEntries(){
     try{
-      const csv = await fetchWithFallback();
+      const url = `${ENTRIES_URL}?t=${Date.now()}`;
+      const res = await fetch(url, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      
+      const csv = await res.text();
       const lines = csv.split(/\r?\n/).filter(Boolean);
       if (lines.length <= 1) throw new Error('CSV vazio');
 
@@ -1698,7 +1421,6 @@ function updateDrawDateDisplay() {
 
       for(let i=1;i<lines.length;i++){
         const row = parseCSVLine(lines[i], delimiter);
-        // Updated for new header: 0 timestamp, 1 platform, 2 gameId, 3 whatsapp, 4 numbers, 5 drawDate, 6 contest, 7 ticket#, 8 status
         if(row.length < 9) continue;
 
         const timestampRaw = row[0]||'';
@@ -1779,44 +1501,82 @@ function updateDrawDateDisplay() {
     renderEntries();
   }
   function renderEntries(){
-    const grid=document.getElementById('entriesGrid');
-    grid.innerHTML='';
-    const start=(currentPage-1)*perPage;
-    const end=start+perPage;
-    const pageEntries=filteredEntries.slice(start,end);
-    if(pageEntries.length===0){
-      grid.innerHTML='<div class="empty-state">🔍 Nenhuma participação encontrada.<br>Tente ajustar filtros ou busca.</div>';
-      updatePagination(); return;
+    const grid = document.getElementById('entriesGrid');
+    grid.innerHTML = '';
+
+    const start = (currentPage - 1) * perPage;
+    const end = start + perPage;
+    const pageEntries = filteredEntries.slice(start, end);
+
+    if (pageEntries.length === 0) {
+      grid.innerHTML = '<div class="empty-state">🔍 Nenhuma participação encontrada.<br>Tente ajustar filtros ou busca.</div>';
+      updatePagination();
+      return;
     }
-    pageEntries.forEach(entry=>{
-      const statusClass=normalizeStatus(entry.status);
-      const statusLabel=statusClass==='valid'?'VÁLIDO':statusClass==='invalid'?'INVÁLIDO':'⏳ Em verificação...';
-      const numsHTML=entry.numbers.map(num=>`<div class="number-badge ${getBallColorClass(num)}">${num.toString().padStart(2,'0')}</div>`).join('');
+
+    pageEntries.forEach(entry => {
+      const statusClass = normalizeStatus(entry.status);
+      const statusLabel = statusClass === 'valid' ? 'VÁLIDO' :
+                         statusClass === 'invalid' ? 'INVÁLIDO' :
+                         'EM VERIFICAÇÃO';
+
+      // Format numbers with ball styling
+      const numsHTML = entry.numbers.map(num =>
+        `<div class="number-badge ${getBallColorClass(num)}">
+           <span class="number-text">${num.toString().padStart(2,'0')}</span>
+         </div>`
+      ).join('');
+
+      // Format timestamp
       const formattedTime = formatBr(entry.parsedDate) || entry.timestamp || '—';
-      const card=document.createElement('div');
-      card.className=`entry-card ${statusClass}`;
-      card.innerHTML=`
+
+      // Create card element with neumorphism classes
+      const card = document.createElement('div');
+      card.className = `entry-card ${statusClass} neuro-card`;
+
+      // Add data attributes for enhanced neumorphism effects
+      card.setAttribute('data-status', statusClass);
+
+      card.innerHTML = `
         <div class="entry-top">
+          <div class="status-badge ${statusClass}">${statusLabel}</div>
           <div class="entry-id-block">
-            <div class="entry-id-title">🎰 ID DE JOGO: ${entry.gameId}</div>
+            <div class="entry-id-title">ID: ${entry.gameId}</div>
             <div class="entry-id-sub">${entry.bilheteNumber || '—'}</div>
           </div>
-          <div class="status-badge ${statusClass}">${statusLabel}</div>
         </div>
-        <div class="entry-meta">
+
+        <div class="entry-meta neuro-meta">
           <div class="meta-left">
-            <div class="detail-item">📱 WhatsApp: ${entry.whatsappMasked}</div>
-            <div class="detail-item">📅 Data do sorteio: ${entry.drawDate}</div>
+            <div class="detail-item">
+              📱 <strong>${entry.whatsappMasked}</strong>
+            </div>
+            <div class="detail-item">
+              🏢 <strong>${entry.platform || 'POPN1'}</strong>
+            </div>
           </div>
           <div class="meta-right">
-            <div class="detail-item">🎰 Concurso: ${entry.contest}</div>
-            <div class="detail-item">🕒 ${formattedTime}</div>
+            <div class="detail-item">
+              🎰 Concurso <strong>${entry.contest}</strong>
+            </div>
+            <div class="detail-item">
+              📅 <strong>${entry.drawDate}</strong>
+            </div>
           </div>
         </div>
-        <div class="numbers-display">${numsHTML}</div>
+
+        <div class="numbers-display neuro-numbers">
+          ${numsHTML}
+        </div>
+
+        <div class="entry-timestamp neuro-timestamp">
+          🕒 ${formattedTime}
+        </div>
       `;
+
       grid.appendChild(card);
     });
+
     updatePagination();
   }
   function updatePagination(){
@@ -1826,7 +1586,6 @@ function updateDrawDateDisplay() {
     document.getElementById('nextBtn').disabled=currentPage>=totalPages;
   }
 
-  // Only initialize if the elements exist (i.e., on the main page with vld section)
   if (document.querySelector('.vld-section')) {
     document.querySelectorAll('.filter-btn').forEach(btn=>{
       btn.addEventListener('click',()=>{
@@ -1841,11 +1600,11 @@ function updateDrawDateDisplay() {
       applyFilters();
     });
     document.getElementById('prevBtn').addEventListener('click',()=>{
-      if(currentPage>1){currentPage--; renderEntries(); window.scrollTo({top:0,behavior:'smooth'});}
+      if(currentPage>1){currentPage--; renderEntries();}
     });
     document.getElementById('nextBtn').addEventListener('click',()=>{
       const totalPages=Math.ceil(filteredEntries.length/perPage);
-      if(currentPage<totalPages){currentPage++; renderEntries(); window.scrollTo({top:0,behavior:'smooth'});}
+      if(currentPage<totalPages){currentPage++; renderEntries();}
     });
     document.getElementById('perPageSelect').addEventListener('change',e=>{
       perPage=parseInt(e.target.value); currentPage=1; renderEntries();
@@ -1860,60 +1619,255 @@ function updateDrawDateDisplay() {
 (function() {
   document.addEventListener('DOMContentLoaded', function() {
     const navItems = document.querySelectorAll('.mobile-nav .nav-item');
+    const sections = {
+      'home': null, // home is default, hide others
+      'rules': document.querySelector('.rules-section'),
+      'search': document.querySelector('.vld-section'),
+      'help': document.getElementById('verticalVideoSection'),
+      'popluz': document.querySelector('.popluz-section')
+    };
+
+    // Function to show section
+    function showSection(target) {
+      // Hide all sections
+      Object.values(sections).forEach(section => {
+        if (section) section.style.display = 'none';
+      });
+
+      // Hide home-specific sections
+      document.querySelector('.hero-section').style.display = 'none';
+      document.querySelector('.selection-section').style.display = 'none';
+
+      // Scroll to top for smooth transition
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      if (target === 'home') {
+        // Show home sections
+        document.querySelector('.hero-section').style.display = 'block';
+        document.querySelector('.selection-section').style.display = 'block';
+      } else {
+        // Show target section
+        if (sections[target]) {
+          sections[target].style.display = 'block';
+        }
+      }
+
+      // Special handling for search
+      if (target === 'search') {
+        setTimeout(() => {
+          const searchBox = document.getElementById('searchBox');
+          if (searchBox) {
+            searchBox.focus();
+            searchBox.classList.add('highlighted');
+            setTimeout(() => {
+              searchBox.classList.remove('highlighted');
+            }, 2000);
+          }
+        }, 100);
+      }
+    }
 
     navItems.forEach(item => {
       item.addEventListener('click', function(e) {
         e.preventDefault();
         const target = this.getAttribute('data-target');
 
-        switch(target) {
-          case 'home':
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            break;
-          case 'search':
-            const vldSection = document.querySelector('.vld-section');
-            if (vldSection) {
-              // Scroll to vld-section with offset for sticky header
-              const offset = 100; // Adjust for sticky header height
-              const elementPosition = vldSection.getBoundingClientRect().top;
-              const offsetPosition = elementPosition + window.pageYOffset - offset;
+        showSection(target);
 
-              window.scrollTo({
-                top: offsetPosition,
-                behavior: 'smooth'
-              });
-
-              // Focus and highlight search bar after scroll
-              setTimeout(() => {
-                const searchBox = document.getElementById('searchBox');
-                if (searchBox) {
-                  searchBox.focus();
-                  searchBox.classList.add('highlighted');
-                  setTimeout(() => {
-                    searchBox.classList.remove('highlighted');
-                  }, 2000);
-                }
-              }, 500);
-            }
-            break;
-          case 'rules':
-            const rulesSection = document.querySelector('.rules-section');
-            if (rulesSection) {
-              rulesSection.scrollIntoView({ behavior: 'smooth' });
-            }
-            break;
-          case 'help':
-            const helpSection = document.getElementById('verticalVideoSection');
-            if (helpSection) {
-              helpSection.scrollIntoView({ behavior: 'smooth' });
-            }
-            break;
-        }
-
-        // Update active state
         navItems.forEach(nav => nav.classList.remove('active'));
         this.classList.add('active');
       });
     });
+
+    // Show home by default
+    showSection('home');
   });
+})();
+
+// POPLUZ Slider and Countdown
+(function() {
+  document.addEventListener('DOMContentLoaded', function() {
+    const slider = document.getElementById('popluzSlider');
+    const dotsContainer = document.getElementById('popluzDots');
+    const countdownElement = document.querySelector('.popluz-coming-soon');
+    
+    if (!slider || !dotsContainer) return;
+    
+    const slides = slider.querySelectorAll('.popluz-slide');
+    const totalSlides = slides.length;
+    let currentSlide = 0;
+
+    // Create dots
+    slides.forEach((_, index) => {
+      const dot = document.createElement('div');
+      dot.className = 'dot';
+      if (index === 0) dot.classList.add('active');
+      dot.addEventListener('click', () => goToSlide(index));
+      dotsContainer.appendChild(dot);
+    });
+
+    const dots = dotsContainer.querySelectorAll('.dot');
+
+    function goToSlide(index) {
+      currentSlide = index;
+      slider.style.transform = `translateX(-${currentSlide * 100}%)`;
+      updateDots();
+    }
+
+    function updateDots() {
+      dots.forEach((dot, index) => {
+        dot.classList.toggle('active', index === currentSlide);
+      });
+    }
+
+    function nextSlide() {
+      currentSlide = (currentSlide + 1) % totalSlides;
+      goToSlide(currentSlide);
+    }
+
+    // Auto slide every 4 seconds
+    setInterval(nextSlide, 4000);
+
+        // Countdown to January 6, 2026, Brazil time (UTC-3) at 00:01
+        function updateCountdown() {
+            const brazilTime = getBrazilTime();
+            const target = new Date('2026-01-06T00:01:00-03:00'); // Jan 6, 2026 00:01 Brazil
+            const diff = target - brazilTime;
+      
+      if (diff > 0) {
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        
+        document.getElementById('days').textContent = days.toString().padStart(2, '0');
+        document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+        document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+        document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+      } else {
+        document.getElementById('countdownDisplay').innerHTML = '<div class="launched">🚀 LANÇADO!</div>';
+      }
+    }
+
+    // Update countdown every second
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+  });
+})();
+
+// Anti-debugging protection
+(function() {
+  let devtoolsOpen = false;
+  let secretKeyPressed = false;
+  let secretKeyTimer;
+  let qPressed = false;
+  let twoPressed = false;
+
+  // Function to show toast
+  function showToast(message) {
+    const toast = document.createElement('div');
+    toast.textContent = message;
+    toast.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      padding: 30px 60px;
+      border-radius: 16px;
+      font-weight: 900;
+      font-size: 24px;
+      z-index: 10001;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.5), 0 0 20px rgba(16, 185, 129, 0.4);
+      border: 3px solid rgba(255,255,255,0.3);
+      animation: zoomInOut 2.5s ease-in-out;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+      toast.remove();
+    }, 2500);
+  }
+
+  // Add toast animations to CSS if not present
+  if (!document.querySelector('#toast-styles')) {
+    const style = document.createElement('style');
+    style.id = 'toast-styles';
+    style.textContent = `
+      @keyframes zoomInOut {
+        0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+        15% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+        85% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+        100% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // Block right-click
+  document.addEventListener('contextmenu', function(e) {
+    if (!devtoolsOpen) {
+      e.preventDefault();
+    }
+  });
+
+  // Block keyboard shortcuts
+  document.addEventListener('keydown', function(e) {
+    // Secret key: hold q + 2 for 2 seconds
+    if (e.key === 'q' || e.key === 'Q') {
+      qPressed = true;
+    }
+    if (e.key === '2') {
+      twoPressed = true;
+    }
+
+    if (qPressed && twoPressed && !secretKeyPressed) {
+      secretKeyPressed = true;
+      secretKeyTimer = setTimeout(() => {
+        devtoolsOpen = true;
+        showToast('OK BOSKU GAS');
+        qPressed = false;
+        twoPressed = false;
+        secretKeyPressed = false;
+      }, 2000);
+    }
+
+    // Block dev tool shortcuts if not unlocked
+    if (!devtoolsOpen) {
+      if (
+        e.key === 'F12' ||
+        (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
+        (e.ctrlKey && e.key === 'U') ||
+        (e.ctrlKey && e.key === 'S')
+      ) {
+        e.preventDefault();
+        return false;
+      }
+    }
+  });
+
+  document.addEventListener('keyup', function(e) {
+    if (e.key === 'q' || e.key === 'Q') {
+      qPressed = false;
+    }
+    if (e.key === '2') {
+      twoPressed = false;
+    }
+
+    if (secretKeyPressed && (!qPressed || !twoPressed)) {
+      clearTimeout(secretKeyTimer);
+      secretKeyPressed = false;
+    }
+  });
+
+  // Detect dev tools open (basic detection)
+  let threshold = 160;
+  setInterval(() => {
+    if (!devtoolsOpen && window.outerHeight - window.innerHeight > threshold || window.outerWidth - window.innerWidth > threshold) {
+      // Dev tools might be open, but don't block unless shortcuts are used
+    }
+  }, 500);
 })();

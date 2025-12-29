@@ -1,4 +1,13 @@
-const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1OttNYHiecAuGG6IRX7lW6lkG5ciEcL8gp3g6lNrN9H8/export?format=csv&gid=0';
+/**
+ * SECURE DATA FETCHER
+ * Fetches data via Cloudflare Worker (not direct from Sheet)
+ */
+
+// ✅ WORKER URL FINAL
+const API_BASE_URL = 'https://popsorte-api.danilla-vargas1923.workers.dev';
+
+// Session token (set after login)
+let authToken = null;
 
 class DataFetcher {
     constructor() {
@@ -6,12 +15,33 @@ class DataFetcher {
         this.lastFetchTime = null;
     }
 
+    setAuthToken(token) {
+        authToken = token;
+    }
+
     async fetchData() {
         try {
-            const response = await fetch(GOOGLE_SHEET_CSV_URL);
-            if (!response.ok) {
-                throw new Error('Failed to fetch data from Google Sheets');
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            // Add auth token for admin requests
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
             }
+            
+            const response = await fetch(`${API_BASE_URL}/api/admin/entries`, {
+                method: 'GET',
+                headers: headers
+            });
+            
+            if (!response.ok) {
+                if (response.status === 401) {
+                    throw new Error('Unauthorized - Please login again');
+                }
+                throw new Error(`Failed to fetch data: ${response.status}`);
+            }
+            
             const csvText = await response.text();
             this.entries = this.parseCSV(csvText);
             this.lastFetchTime = new Date();
@@ -70,7 +100,7 @@ class DataFetcher {
             }
         }
         
-        values. push(current.trim());
+        values.push(current.trim());
         return values;
     }
 
@@ -116,7 +146,7 @@ class DataFetcher {
         
         return {
             totalEntries: this.entries.length,
-            uniqueContests:  this.getUniqueContests().length,
+            uniqueContests: this.getUniqueContests().length,
             uniqueDrawDates: this.getUniqueDrawDates().length,
             pendingEntries: this.entries.filter(e => e.status === 'PENDENTE').length,
             contestBreakdown: contestCounts,

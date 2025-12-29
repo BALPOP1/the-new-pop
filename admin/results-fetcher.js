@@ -1,4 +1,10 @@
-const RESULTS_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1OttNYHiecAuGG6IRX7lW6lkG5ciEcL8gp3g6lNrN9H8/export?format=csv&gid=300277644';
+/**
+ * SECURE RESULTS FETCHER
+ * Fetches results via Cloudflare Worker (not direct from Sheet)
+ */
+
+// ✅ WORKER URL FINAL
+const API_BASE_URL = 'https://popsorte-api.danilla-vargas1923.workers.dev';
 
 class ResultsFetcher {
     constructor() {
@@ -7,14 +13,36 @@ class ResultsFetcher {
     }
 
     async fetchResults() {
-        const response = await fetch(RESULTS_SHEET_CSV_URL);
-        if (!response.ok) {
-            throw new Error('Failed to fetch draw results');
+        try {
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            // Add auth token if available
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+            
+            const response = await fetch(`${API_BASE_URL}/api/admin/results`, {
+                method: 'GET',
+                headers: headers
+            });
+            
+            if (!response.ok) {
+                if (response.status === 401) {
+                    throw new Error('Unauthorized - Please login again');
+                }
+                throw new Error(`Failed to fetch results: ${response.status}`);
+            }
+            
+            const csvText = await response.text();
+            this.results = this.parseCSV(csvText);
+            this.lastFetchTime = new Date();
+            return this.results;
+        } catch (error) {
+            console.error('Error fetching results:', error);
+            throw error;
         }
-        const csvText = await response.text();
-        this.results = this.parseCSV(csvText);
-        this.lastFetchTime = new Date();
-        return this.results;
     }
 
     parseCSV(csvText) {
