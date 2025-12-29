@@ -7,12 +7,26 @@
 const API_BASE_URL = 'https://popsorte-api.danilla-vargas1923.workers.dev';
 
 // Session token (set after login)
+// REQ 2: Use global authToken to sync with auth.js, or initialize from session on load
 let authToken = null;
 
 class DataFetcher {
     constructor() {
         this.entries = [];
         this.lastFetchTime = null;
+        
+        // REQ 2: Initialize token from session if available (fixes race condition)
+        this.initializeTokenFromSession();
+    }
+
+    // REQ 2: Initialize token from session storage on load
+    initializeTokenFromSession() {
+        if (typeof getSession === 'function') {
+            const session = getSession();
+            if (session && session.token) {
+                authToken = session.token;
+            }
+        }
     }
 
     setAuthToken(token) {

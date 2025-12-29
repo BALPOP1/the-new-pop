@@ -4,6 +4,7 @@ let dashboardChartInstance = null;
 /**
  * DASHBOARD PAGE LOGIC
  */
+// REQ 2: Improved error handling with 401 redirect
 async function initDashboard() {
     showLoading(true);
     hideError();
@@ -18,6 +19,15 @@ async function initDashboard() {
         updateLastUpdateTime();
         setAccountBanner();
     } catch (error) {
+        // REQ 2: Redirect to login on 401 Unauthorized
+        if (error.message && error.message.includes('Unauthorized')) {
+            if (typeof logout === 'function') {
+                logout();
+            } else {
+                window.location.replace('/admin/login.html');
+            }
+            return;
+        }
         showError('Failed to load data: ' + error.message);
     } finally {
         showLoading(false);

@@ -10,6 +10,20 @@ class ResultsFetcher {
     constructor() {
         this.results = [];
         this.lastFetchTime = null;
+        
+        // REQ 2: Ensure authToken is initialized from session if available
+        this.ensureAuthTokenInitialized();
+    }
+
+    // REQ 2: Initialize token from session storage on load (fixes race condition)
+    ensureAuthTokenInitialized() {
+        if (typeof getSession === 'function') {
+            const session = getSession();
+            if (session && session.token && typeof authToken === 'undefined') {
+                // Set global authToken if not already set
+                window.authToken = session.token;
+            }
+        }
     }
 
     async fetchResults() {
@@ -17,6 +31,9 @@ class ResultsFetcher {
             const headers = {
                 'Content-Type': 'application/json'
             };
+            
+            // REQ 2: Ensure token is initialized before use
+            this.ensureAuthTokenInitialized();
             
             // Add auth token if available
             if (authToken) {
