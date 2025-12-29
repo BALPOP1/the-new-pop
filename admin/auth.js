@@ -9,6 +9,9 @@ const API_BASE_URL = 'https://popsorte-api.danilla-vargas1923.workers.dev';
 const AUTH_SESSION_KEY = 'ps_admin_session';
 const AUTH_SESSION_TTL_HOURS = 12;
 
+// Global auth token (used by fetchers)
+let authToken = null;
+
 /**
  * Login via Worker API
  */
