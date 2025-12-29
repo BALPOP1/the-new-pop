@@ -4,7 +4,12 @@
  */
 
 // ✅ WORKER URL FINAL
-const API_BASE_URL = 'https://popsorte-api.danilla-vargas1923.workers.dev';
+// REQ 3: Share API_BASE_URL across all admin scripts (auth.js loads first, so it sets the global)
+if (typeof window.API_BASE_URL === 'undefined') {
+    window.API_BASE_URL = 'https://popsorte-api.danilla-vargas1923.workers.dev';
+}
+// REQ 3: Use var to allow redeclaration across multiple script files
+var API_BASE_URL = window.API_BASE_URL;
 
 const AUTH_SESSION_KEY = 'ps_admin_session';
 const AUTH_SESSION_TTL_HOURS = 12;
