@@ -46,7 +46,7 @@ class DataFetcher {
                 headers['Authorization'] = `Bearer ${authToken}`;
             }
             
-            const response = await fetch(`${API_BASE_URL}/api/admin/entries`, {
+            const response = await fetch(`${API_BASE_URL}/api/admin/entries?t=1767032190908`, {
                 method: 'GET',
                 headers: headers
             });
