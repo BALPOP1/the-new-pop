@@ -1440,15 +1440,19 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
     display: flex !important;
     align-items: flex-start;
     justify-content: center;
-    padding: 20px 0;
+    padding: 20px;
   }
   .user-info-popup-content {
     width: 94%;
     max-width: 94%;
     border-radius: 12px;
     max-height: calc(100vh - 40px);
-    position: relative;
-    margin: 20px 0;
+    /* CENTERING: Remove absolute positioning, let flexbox center it */
+    position: static;
+    top: auto;
+    left: auto;
+    transform: none;
+    margin: 0 auto;
   }
   .user-info-popup-body {
     padding: 28px 16px 18px;
