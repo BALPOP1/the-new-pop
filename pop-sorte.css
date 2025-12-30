@@ -786,7 +786,7 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
 
 /* Consistent text sizing in CTA buttons */
 .cta-stack .cta-button .info-n1 {
-  font-size: 0.78rem;
+  font-size: 1.4rem;
   line-height: 1.2;
   width: auto;
 }
