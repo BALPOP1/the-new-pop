@@ -1436,8 +1436,8 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
 }
 
 @media (max-width: 640px) {
-  .user-info-popup {
-    display: flex;
+  .user-info-popup[style*="display: block"] {
+    display: flex !important;
     align-items: flex-start;
     justify-content: center;
     padding: 20px 0;
