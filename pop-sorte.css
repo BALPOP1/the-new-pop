@@ -786,7 +786,7 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
 
 /* Consistent text sizing in CTA buttons */
 .cta-stack .cta-button .info-n1 {
-  font-size: 1.4rem;
+  font-size: 1.3rem;
   line-height: 1.2;
   width: auto;
 }
@@ -802,14 +802,24 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   backdrop-filter: blur(6px);
   text-align: center;
   justify-content: center;
+  align-items: center;
   flex-direction: row;
+  gap: 12px;
 }
-.chip-icon { font-size: 1.4rem; }
+.prize-chip > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.chip-icon { font-size: 1.8rem; }
 .chip-label {
-  font-size: 0.72rem; text-transform: uppercase; opacity: 0.82;
+  font-size: 0.88rem; text-transform: uppercase; opacity: 0.82;
   letter-spacing: 0.04em; font-weight: 700;
+  text-align: center;
 }
-.chip-value { font-size: 1.15rem; font-weight: 800; color: #facc15; }
+.chip-value { font-size: 1.5rem; font-weight: 800; color: #facc15; text-align: center; }
 
 .cta-button {
   background: #ffffff; color: #2d1a05; border: 2px solid #f1c40f;
@@ -860,7 +870,7 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
 .info-n1 {
   width: auto;
   text-align: center;
-  font-weight: 1000; letter-spacing: 0.02em; font-size: 1.2rem;
+  font-weight: 1000; letter-spacing: 0.02em; font-size: 1.3rem;
   color: #ffffff; text-transform: uppercase;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), 0 4px 12px rgba(0, 0, 0, 0.6), 0 1px 2px rgba(0, 0, 0, 0.9);
 }
@@ -1276,7 +1286,18 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
 }
 
 /* POPUP */
-.user-info-popup { display: none; position: fixed; z-index: 12000; left: 0; top: 0; width: 100%; height:  100%; background: rgba(0,0,0,0.7); }
+.user-info-popup { 
+  display: none; 
+  position: fixed; 
+  z-index: 12000; 
+  left: 0; 
+  top: 0; 
+  width: 100%; 
+  height: 100%; 
+  background: rgba(0,0,0,0.7);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
 .user-info-popup-content { 
   background: white; 
   position: absolute;
@@ -1286,8 +1307,10 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   padding: 0; 
   border-radius: 15px; 
   width: 90%; 
-  max-width:  500px; 
+  max-width: 500px; 
+  max-height: 90vh;
   isolation: isolate;
+  overflow: visible;
 }
 .user-info-popup-content::before {
   content: "";
@@ -1316,9 +1339,13 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   100% { background-position: 300% 50%; }
 }
 .close-popup { position: absolute; right: 15px; top: 15px; font-size: 28px; font-weight: bold; color: #aaa; cursor: pointer; z-index: 1; }
-.user-info-popup-body { padding: 40px 20px 20px; }
-.user-info-popup-content,
-.user-info-popup-body {
+.user-info-popup-body { 
+  padding: 40px 20px 20px; 
+  overflow-y: auto;
+  max-height: calc(90vh - 80px);
+  -webkit-overflow-scrolling: touch;
+}
+.user-info-popup-content {
   overflow: visible;
 }
 .popup-title { font-size: 1.3rem; color: var(--primary); margin-bottom: 20px; text-align: center; font-weight: 700; }
@@ -1403,12 +1430,26 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
 }
 
 @media (max-width: 640px) {
+  .user-info-popup {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 20px 0;
+  }
   .user-info-popup-content {
     width: 94%;
     border-radius: 12px;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 20px;
+    max-height: calc(100vh - 40px);
+    position: relative;
   }
   .user-info-popup-body {
     padding: 28px 16px 18px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
   .popup-warning {
     margin-top: 12px;
@@ -1422,8 +1463,8 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
 /* TOAST — compact & clear */
 .toast {
   visibility: hidden;
-  min-width: 280px;
-  max-width: 520px;
+  min-width: 250px;
+  max-width: 480px;
   background: linear-gradient(180deg, #4c1d95, #4c1d95);
   color: #f9fafb;
   text-align: center;
@@ -1603,12 +1644,12 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   }
 
   .cta-stack .cta-button .info-n1 {
-    font-size: 1rem;
+    font-size: 1.3rem;
   }
 
-  .chip-label { font-size: 0.65rem; }
-  .chip-value { font-size: 1rem; }
-  .chip-icon { font-size: 1.2rem; }
+  .chip-label { font-size: 0.75rem; }
+  .chip-value { font-size: 1.2rem; }
+  .chip-icon { font-size: 1.5rem; }
 }
 
 /* Desktop polish for selection area */
@@ -1690,8 +1731,8 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
 /* FLOATING WHATSAPP BUTTON */
 .floating-whatsapp {
   position: fixed;
-  bottom: 120px;
-  right: 24px;
+  bottom: 120px; /* CHANGE THIS: Distance from bottom (increase = higher, decrease = lower) */
+  right: 24px; /* CHANGE THIS: Distance from right (increase = more left, decrease = more right) */
   width: 64px;
   height: 64px;
   background: white;
@@ -1774,8 +1815,8 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   .floating-whatsapp {
     width: 56px;
     height: 56px;
-    bottom: 110px;
-    right: 20px;
+    bottom: 110px; /* MOBILE: Distance from bottom (increase = higher, decrease = lower) */
+    right: 20px; /* MOBILE: Distance from right (increase = more left, decrease = more right) */
   }
   
   /* Toast mobile positioning - above mobile nav */
@@ -1872,7 +1913,7 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   }
 
   .cta-stack .cta-button .info-n1 {
-    font-size: 0.75rem;
+    font-size: 1.3rem;
   }
 
   .chip-label { font-size: 0.65rem; }
@@ -2246,7 +2287,7 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
     flex: 1;
     min-height: 56px;
   }
-  .info-n1 { font-size: 1.5rem; }
+  .info-n1 { font-size: 1.3rem; }
 }
 
 /* Mobile/Desktop Floating Navigation */
@@ -3907,7 +3948,7 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 20px;
+  padding: 12px 70px; /* INCREASED LENGTH: Change 40px to adjust width (horizontal padding) */
   border-radius: 15px;
   text-decoration: none;
   font-weight: 700;
