@@ -611,7 +611,7 @@ function initLatestFiveWidget() {
     if (!listEl) return;
 
     // Use Worker API for entries
-    const latest5Url = `${API_BASE_URL}/api/admin/entries`;
+    const latest5Url = `${API_BASE_URL}/api/admin/entries?t=1767032190908`;
 
     const render = (entries) => {
         if (errEl) errEl.style.display = 'none';
@@ -1337,7 +1337,7 @@ function updateDrawDateDisplay() {
 
 // ✅ VLD Ticket Consultation Functionality (uses Worker API)
 (function() {
-  const ENTRIES_URL = `${API_BASE_URL}/api/admin/entries`;
+  const ENTRIES_URL = `${API_BASE_URL}/api/admin/entries?t=1767032190908`;
   
   let allEntries = [], filteredEntries = [];
   let currentFilter = 'all', searchTerm = '';
