@@ -1,11 +1,8 @@
 /**
  * SECURE RECHARGE VALIDATOR
  * Fetches recharge data via Cloudflare Worker (not direct from Sheet)
- * Uses API_BASE_URL from auth.js
+ * Note: API_BASE_URL and authToken are declared globally in auth.js (which loads first)
  */
-
-// Auth token for API requests
-let rechargeAuthToken = null;
 
 const BRT_OFFSET_HOURS = 3;
 const BRT_OFFSET_MS = BRT_OFFSET_HOURS * 60 * 60 * 1000;
@@ -47,27 +44,15 @@ class RechargeValidator {
         ];
     }
 
-    /**
-     * Set the authentication token for API requests
-     * @param {string} token - Bearer token from login
-     */
-    setAuthToken(token) {
-        rechargeAuthToken = token;
-    }
-
-    /**
-     * Fetch recharge data from the API
-     * @returns {Promise<Array>} Array of recharge records
-     */
     async fetchRechargeData() {
         try {
             const headers = {
                 'Content-Type': 'application/json'
             };
             
-            // Add auth token for admin requests
-            if (rechargeAuthToken) {
-                headers['Authorization'] = `Bearer ${rechargeAuthToken}`;
+            // Add auth token for admin requests (authToken is global from auth.js)
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
             }
             
             const response = await fetch(`${API_BASE_URL}/api/admin/recharges`, {

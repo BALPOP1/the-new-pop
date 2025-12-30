@@ -11,7 +11,8 @@ async function initDashboard() {
         await Promise.all([
             dataFetcher.fetchData(),
             resultsFetcher.fetchResults(),
-            rechargeValidator.fetchRechargeData()
+            rechargeValidator.fetchRechargeData(),
+            sorteFetcher.fetchSorte()
         ]);
         validator.setResults(resultsFetcher.getAllResults());
         updateDashboard();
@@ -534,11 +535,6 @@ function initializePage(pageId) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize auth tokens for all fetchers
-    if (typeof initializeAuthTokens === 'function') {
-        initializeAuthTokens();
-    }
-    
     initDashboard();
     setupAutoRefresh();
     

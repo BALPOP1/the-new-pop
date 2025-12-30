@@ -6,11 +6,11 @@
 // ✅ WORKER URL FINAL
 const API_BASE_URL = 'https://popsorte-api.danilla-vargas1923.workers.dev';
 
+// Global auth token shared across all fetchers (data-fetcher.js, results-fetcher.js, recharge-validator.js)
+let authToken = null;
+
 const AUTH_SESSION_KEY = 'ps_admin_session';
 const AUTH_SESSION_TTL_HOURS = 12;
-
-// Global auth token (used by fetchers)
-let authToken = null;
 
 /**
  * Login via Worker API
@@ -25,16 +25,7 @@ async function loginAdmin(account, password) {
             body: JSON.stringify({ account, password })
         });
         
-        let data;
-        try {
-            data = await response.json();
-        } catch (e) {
-            // If response is not JSON, create error from status
-            if (response.status === 401) {
-                throw new Error('Invalid credentials');
-            }
-            throw new Error(`Login failed: ${response.status} ${response.statusText}`);
-        }
+        const data = await response.json();
         
         if (!response.ok || !data.success) {
             throw new Error(data.error || 'Login failed');
@@ -46,16 +37,6 @@ async function loginAdmin(account, password) {
         // Set auth token for data fetchers
         if (typeof dataFetcher !== 'undefined') {
             dataFetcher.setAuthToken(data.token);
-        }
-        
-        // Set auth token for results fetcher
-        if (typeof resultsFetcher !== 'undefined' && resultsFetcher.setAuthToken) {
-            resultsFetcher.setAuthToken(data.token);
-        }
-        
-        // Set auth token for recharge validator
-        if (typeof rechargeValidator !== 'undefined' && rechargeValidator.setAuthToken) {
-            rechargeValidator.setAuthToken(data.token);
         }
         
         return data;
@@ -98,14 +79,6 @@ function getSession() {
             if (typeof dataFetcher !== 'undefined') {
                 dataFetcher.setAuthToken(data.token);
             }
-            // Set auth token for results fetcher
-            if (typeof resultsFetcher !== 'undefined' && resultsFetcher.setAuthToken) {
-                resultsFetcher.setAuthToken(data.token);
-            }
-            // Set auth token for recharge validator
-            if (typeof rechargeValidator !== 'undefined' && rechargeValidator.setAuthToken) {
-                rechargeValidator.setAuthToken(data.token);
-            }
         }
         
         return data;
@@ -143,28 +116,6 @@ function logout() {
     const isNested = window.location.pathname.includes('/admin/pages/');
     const target = isNested ? '../login.html' : '/admin/login.html';
     window.location.replace(target);
-}
-
-/**
- * Initialize auth tokens for all fetchers after page load
- * Call this after all scripts are loaded
- */
-function initializeAuthTokens() {
-    const session = getSession();
-    if (session && session.token) {
-        authToken = session.token;
-        
-        // Set tokens for all fetchers
-        if (typeof dataFetcher !== 'undefined' && dataFetcher.setAuthToken) {
-            dataFetcher.setAuthToken(session.token);
-        }
-        if (typeof resultsFetcher !== 'undefined' && resultsFetcher.setAuthToken) {
-            resultsFetcher.setAuthToken(session.token);
-        }
-        if (typeof rechargeValidator !== 'undefined' && rechargeValidator.setAuthToken) {
-            rechargeValidator.setAuthToken(session.token);
-        }
-    }
 }
 
 /**

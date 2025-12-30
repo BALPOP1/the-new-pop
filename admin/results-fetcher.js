@@ -1,22 +1,15 @@
 /**
  * SECURE RESULTS FETCHER
  * Fetches results via Cloudflare Worker (not direct from Sheet)
- * Uses API_BASE_URL from auth.js
  */
+
+// ✅ WORKER URL FINAL
+const API_BASE_URL = 'https://popsorte-api.danilla-vargas1923.workers.dev';
 
 class ResultsFetcher {
     constructor() {
         this.results = [];
         this.lastFetchTime = null;
-        this.authToken = null;
-    }
-
-    /**
-     * Set the authentication token for API requests
-     * @param {string} token - Bearer token from login
-     */
-    setAuthToken(token) {
-        this.authToken = token;
     }
 
     async fetchResults() {
@@ -26,8 +19,8 @@ class ResultsFetcher {
             };
             
             // Add auth token if available
-            if (this.authToken) {
-                headers['Authorization'] = `Bearer ${this.authToken}`;
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
             }
             
             const response = await fetch(`${API_BASE_URL}/api/admin/results`, {
@@ -119,3 +112,78 @@ class ResultsFetcher {
 
 // Global instance
 const resultsFetcher = new ResultsFetcher();
+
+class SorteFetcher {
+    constructor() {
+        this.rows = [];
+        this.lastFetchTime = null;
+    }
+
+    async fetchSorte(format = 'json') {
+        try {
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+
+            const qs = format === 'csv' ? '?format=csv' : '';
+            const response = await fetch(`${API_BASE_URL}/api/admin/sorte${qs}`, {
+                method: 'GET',
+                headers
+            });
+
+            if (!response.ok) {
+                if (response.status === 401) throw new Error('Unauthorized - Please login again');
+                throw new Error(`Failed to fetch SORTE: ${response.status}`);
+            }
+
+            if (format === 'csv') {
+                const csvText = await response.text();
+                this.rows = this.parseCSV(csvText);
+            } else {
+                const json = await response.json();
+                this.rows = json.values || [];
+            }
+
+            this.lastFetchTime = new Date();
+            return this.rows;
+        } catch (err) {
+            console.error('Error fetching SORTE:', err);
+            throw err;
+        }
+    }
+
+    parseCSV(csvText) {
+        const lines = csvText.split('\n').filter(Boolean);
+        const rows = [];
+        for (const line of lines) {
+            rows.push(this.parseCSVLine(line));
+        }
+        return rows;
+    }
+
+    parseCSVLine(line) {
+        const values = [];
+        let current = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+            const ch = line[i];
+            if (ch === '"') {
+                inQuotes = !inQuotes;
+            } else if (ch === ',' && !inQuotes) {
+                values.push(current.trim());
+                current = '';
+            } else {
+                current += ch;
+            }
+        }
+        values.push(current.trim());
+        return values;
+    }
+
+    getAllRows() {
+        return this.rows;
+    }
+}
+
+const sorteFetcher = new SorteFetcher();
