@@ -1048,7 +1048,20 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
     display: flex;
     gap: 10px;
     justify-content: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    width: 100%;
+}
+@media (max-width: 640px) {
+  .tg-buttons {
+    gap: 8px;
+  }
+  .tg-button,
+  .wa-button {
+    min-width: 100px;
+    flex: 1;
+    padding: 12px 8px;
+    font-size: 0.8rem;
+  }
 }
 .tg-button {
     display: inline-flex;
@@ -1063,6 +1076,9 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
     background: linear-gradient(180deg, #0088CC, #01334c);
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    text-align: center;
+    min-width: 120px;
+    flex: 1;
 }
 .tg-button:hover {
     transform: translateY(-2px) scale(1.02);
@@ -1082,6 +1098,9 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
     background: linear-gradient(180deg, #25D366, #075E54);
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    text-align: center;
+    min-width: 120px;
+    flex: 1;
 }
 .wa-button:hover {
     transform: translateY(-2px) scale(1.02);
@@ -1453,6 +1472,10 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
     left: auto;
     transform: none;
     margin: 0 auto;
+  }
+  /* REMOVE BORDER ON MOBILE - prevents overflow outside viewport */
+  .user-info-popup-content::before {
+    display: none;
   }
   .user-info-popup-body {
     padding: 28px 16px 18px;
@@ -3951,13 +3974,27 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   gap: 12px;
   justify-content: center;
   align-items: center;
+  flex-wrap: nowrap;
+  width: 100%;
+}
+@media (max-width: 640px) {
+  .contact-buttons {
+    gap: 8px;
+  }
+  .contact-btn {
+    padding: 12px 20px;
+    min-width: 100px;
+    font-size: 0.85rem;
+  }
 }
 
 .contact-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  text-align: center;
   gap: 8px;
-  padding: 12px 70px; /* INCREASED LENGTH: Change 40px to adjust width (horizontal padding) */
+  padding: 12px 70px; /* INCREASED LENGTH: Change 70px to adjust width (horizontal padding) */
   border-radius: 15px;
   text-decoration: none;
   font-weight: 700;
@@ -3966,6 +4003,8 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   position: relative;
   overflow: hidden;
   animation: buttonGlow 2s ease-in-out infinite alternate;
+  flex: 1;
+  min-width: 120px;
 }
 
 .contact-btn::before {
