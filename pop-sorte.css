@@ -44,27 +44,67 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   opacity: 0.7;
   cursor: not-allowed !important;
   pointer-events: none;
-  /* REQ 1: Ensure container allows badge overflow */
-  overflow: visible;
+  overflow: visible !important;
+}
+
+/* Hide the badge from flex layout flow - position it absolutely */
+.coming-soon-btn .coming-soon-badge {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
 }
 
 .coming-soon-badge {
   position: absolute;
-  top: -8px;
-  right: -8px;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
   background: #f59e0b;
   color: white;
-  padding: 3px 8px;
-  border-radius: 12px;
-  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-size: 0.55rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  letter-spacing: 0.3px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   z-index: 10;
   white-space: nowrap;
-  /* REQ 1: Ensure badge is fully visible */
-  overflow: visible;
+  min-width: 45px;
+  min-height: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* Responsive badge sizing */
+@media (min-width: 480px) {
+  .coming-soon-badge {
+    font-size: 0.58rem;
+    padding: 2px 7px;
+    min-width: 50px;
+  }
+}
+
+@media (min-width: 768px) {
+  .coming-soon-badge {
+    font-size: 0.62rem;
+    padding: 3px 8px;
+    min-width: 55px;
+    min-height: 14px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .coming-soon-badge {
+    font-size: 0.65rem;
+    padding: 3px 10px;
+    min-width: 60px;
+    top: -8px;
+  }
 }
 
 .floating-whatsapp-img {
@@ -544,6 +584,7 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   color: white;
   padding: 28px 14px 30px;
   text-align: left;
+  overflow: visible;
 }
 @keyframes heroGradient {
   0% { background-position: 0% 50%; }
@@ -662,8 +703,19 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   object-fit: cover;
 }
 
-.hero-inner { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
-.hero-top { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr); align-items: center; gap: 20px; }
+/* Center the CTA button in vertical video card (Ajuda page) */
+.vertical-video-card .cta-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.hero-inner { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; overflow: visible; }
+.hero-top { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr); align-items: center; gap: 20px; overflow: visible; }
 
 .brand-mark { display: flex; align-items: center; gap: 18px; min-width: 360px; }
 .brand-logo {
@@ -691,46 +743,53 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   grid-template-areas:
     "prize prize"
     "cta1  cta2";
-  gap: 12px;
-  align-items: center;
+  gap: 8px;
+  align-items: stretch;
   justify-items: center;
-  min-height: 78px;
+  height: 148px; /* Match brand-logo height */
   width: 100%;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 16px;
-  padding: 14px;
-  /* REQ 1: Allow badge overflow to be visible */
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
   overflow: visible;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
 }
 .prize-chip, .cta-button {
-  /* REQ 5: Use min-height for desktop, allow mobile override */
-  min-height: 78px;
   display: inline-flex; align-items: center; gap: 10px;
-  padding: 15px 20px; border-radius: 14px;
-  /* REQ 2: Prevent stretching */
-  flex-shrink: 0;
-  flex-grow: 0;
+  padding: 10px 16px; border-radius: 12px;
+  overflow: visible;
+  position: relative;
 }
 .cta-stack .prize-chip {
   grid-area: prize;
   justify-self: stretch;
   width: 100%;
   text-align: center;
+  min-height: 0;
+  height: 100%;
 }
 .cta-stack .cta-button {
   width: 100%;
   max-width: none;
   justify-self: stretch;
-  /* REQ 2: Prevent horizontal stretching, use vertical scaling */
-  /* REQ 5: Use min-height for desktop, allow mobile override */
-  min-height: 78px;
-  flex-shrink: 0;
-  flex-grow: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 0;
+  height: 100%;
+  padding: 8px 10px;
 }
 .cta-stack .cta-button.cta-1 { grid-area: cta1; }
 .cta-stack .cta-button.cta-2 { grid-area: cta2; }
+
+/* Consistent text sizing in CTA buttons */
+.cta-stack .cta-button .info-n1 {
+  font-size: 0.78rem;
+  line-height: 1.2;
+  width: auto;
+}
 
 /* CTA button inside info-banner (COMO FUNCIONA) - LINE 248-251 for customization */
 .info-banner .cta-button {
@@ -741,14 +800,16 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   background: rgba(255,255,255,0.1);
   border: 1px solid rgba(255,255,255,0.22);
   backdrop-filter: blur(6px);
-  text-align: left;
+  text-align: center;
+  justify-content: center;
+  flex-direction: row;
 }
-.chip-icon { font-size: 1.6rem; }
+.chip-icon { font-size: 1.4rem; }
 .chip-label {
-  font-size: 0.84rem; text-transform: uppercase; opacity: 0.82;
+  font-size: 0.72rem; text-transform: uppercase; opacity: 0.82;
   letter-spacing: 0.04em; font-weight: 700;
 }
-.chip-value { font-size: 1.35rem; font-weight: 800; color: #facc15; }
+.chip-value { font-size: 1.15rem; font-weight: 800; color: #facc15; }
 
 .cta-button {
   background: #ffffff; color: #2d1a05; border: 2px solid #f1c40f;
@@ -779,12 +840,12 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   }
 
   .cta-stack {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
     grid-template-areas:
-      "prize"
-      "cta1"
-      "cta2";
+      "prize prize"
+      "cta1  cta2";
     justify-items: stretch;
+    overflow: visible;
   }
 
   .cta-stack .prize-chip,
@@ -792,11 +853,12 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
     justify-self: stretch;
     max-width: none;
     width: 100%;
+    overflow: visible;
   }
 }
 
 .info-n1 {
-  width: 100%;
+  width: auto;
   text-align: center;
   font-weight: 1000; letter-spacing: 0.02em; font-size: 1.2rem;
   color: #ffffff; text-transform: uppercase;
@@ -1368,10 +1430,9 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   border-radius: 10px;
   padding: 12px 20px;
   position: fixed;
-  z-index: 2000;
+  z-index: 10000;
   left: 50%;
-  /* REQ 4: Move toast up to avoid overlapping with navigation container */
-  bottom: 90px;
+  bottom: 100px;
   transform: translateX(-50%);
   font-size: 0.95rem;
   font-weight: 700;
@@ -1444,9 +1505,18 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   .hero-top { grid-template-columns: 1fr; align-items: stretch; }
   .brand-title { font-size: 1.9rem; }
   .brand-logo { width: 120px; height: 120px; border-radius: 16px; }
-  .cta-stack { width: 100%; }
-  .cta-stack .prize-chip { width: 100%; text-align: center; }
-  .cta-stack .cta-button { width: 100%; justify-content: center; text-align: center; }
+  .cta-stack { 
+    width: 100%; 
+    overflow: visible;
+  }
+  .cta-stack .prize-chip { width: 100%; text-align: center; justify-content: center; }
+  .cta-stack .cta-button { 
+    width: 100%; 
+    justify-content: center; 
+    text-align: center; 
+    min-height: 56px;
+    overflow: visible;
+  }
   .cta-scroll-trigger { width: 100%; color: #ffffff;}
   .video-section { padding: 18px 12px 22px; }
   .video-card { padding: 14px 12px 16px; }
@@ -1487,25 +1557,38 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   }
 }
 
-/* TABLET: CTA stack stacks vertically beside brand mark */
+/* TABLET: CTA stack beside brand mark */
 @media (min-width: 641px) and (max-width: 1023px) {
   .hero-top {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr auto;
     align-items: center;
+    gap: 16px;
   }
 
   .brand-mark {
     min-width: auto;
-    width: 100%;
+    width: auto;
+    flex: 1;
+  }
+
+  .brand-logo {
+    width: 120px;
+    height: 120px;
   }
 
   .cta-stack {
-    grid-template-columns: 1fr;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     grid-template-areas:
-      "prize"
-      "cta1"
-      "cta2";
+      "prize prize"
+      "cta1  cta2";
     justify-items: stretch;
+    width: auto;
+    min-width: 240px;
+    max-width: 320px;
+    height: 120px; /* Match brand-logo height on tablet */
+    overflow: visible;
+    gap: 6px;
   }
 
   .cta-stack .prize-chip,
@@ -1514,7 +1597,18 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
     max-width: none;
     justify-content: center;
     justify-self: stretch;
+    min-height: 0;
+    height: 100%;
+    overflow: visible;
   }
+
+  .cta-stack .cta-button .info-n1 {
+    font-size: 1rem;
+  }
+
+  .chip-label { font-size: 0.65rem; }
+  .chip-value { font-size: 1rem; }
+  .chip-icon { font-size: 1.2rem; }
 }
 
 /* Desktop polish for selection area */
@@ -1632,7 +1726,7 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
 /* HORIZONTAL COLOR ANIMATION FOR CTA BUTTON */
 .cta-button {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   background: linear-gradient(
     90deg,
     #facc15 0%,
@@ -1682,6 +1776,11 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
     height: 56px;
     bottom: 110px;
     right: 20px;
+  }
+  
+  /* Toast mobile positioning - above mobile nav */
+  .toast {
+    bottom: 90px;
   }
   
   /* Hero section mobile adjustments */
@@ -1750,38 +1849,44 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
 
   /* Make CTA buttons responsive on mobile - side by side horizontally */
   .cta-stack {
-    flex-direction: row;  /* Explicit: keep items side by side on phone */
-    gap: 8px;
-    /* REQ 5: Mobile - use auto height to match original */
-    min-height: auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "prize prize"
+      "cta1  cta2";
+    gap: 6px;
+    height: auto;
+    min-height: 100px;
     width: 100%;
-    justify-content: center;
-    align-items: center; /* Center items vertically as well */
+    overflow: visible;
   }
+
+  .cta-stack .prize-chip {
+    min-height: 40px;
+    height: auto;
+  }
+
+  .cta-stack .cta-button {
+    min-height: 44px;
+    height: auto;
+  }
+
+  .cta-stack .cta-button .info-n1 {
+    font-size: 0.75rem;
+  }
+
+  .chip-label { font-size: 0.65rem; }
+  .chip-value { font-size: 1rem; }
+  .chip-icon { font-size: 1.2rem; }
   
   .prize-chip, .cta-button {
-    flex: 1; /* Make both items take equal width to help centering */
-    /* REQ 5: Mobile - use auto height and smaller padding to match original */
-    min-height: auto;
-    height: auto;
-    padding: 12px 14px;
+    padding: 10px 12px;
     font-size: 0.8rem;
     display: flex;
     justify-content: center;
     align-items: center;
     text-align: center;
-  }
-  
-  .chip-icon {
-    font-size: 1.3rem;
-  }
-  
-  .chip-label {
-    font-size: 0.7rem;
-  }
-  
-  .chip-value {
-    font-size: 1.1rem;
+    overflow: visible;
   }
   
   .cta-button .label {
@@ -2125,10 +2230,23 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
       "prize prize"
       "cta1  cta2";
     gap: 8px;
+    overflow: visible;
   }
   .cta-stack .prize-chip { width: 100%; justify-content: center; text-align: center; }
-  .cta-stack .cta-button { width: 100%; max-width: 100%; justify-content: center; padding: 12px 10px; }
-  .info-n1 { font-size: 1rem; }
+  .cta-stack .cta-button { 
+    width: 100%; 
+    max-width: 100%; 
+    justify-content: center; 
+    padding: 12px 10px; 
+    min-height: 56px;
+    overflow: visible;
+  }
+  .cta-stack .cta-button.cta-1,
+  .cta-stack .cta-button.cta-2 {
+    flex: 1;
+    min-height: 56px;
+  }
+  .info-n1 { font-size: 1.5rem; }
 }
 
 /* Mobile/Desktop Floating Navigation */

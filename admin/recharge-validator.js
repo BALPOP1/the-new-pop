@@ -1,8 +1,4 @@
-/**
- * SECURE RECHARGE VALIDATOR
- * Fetches recharge data via Cloudflare Worker (not direct from Sheet)
- * Note: API_BASE_URL and authToken are declared globally in auth.js (which loads first)
- */
+const RECHARGE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1c6gnCngs2wFOvVayd5XpM9D3LOlKUxtSjl7gfszXcMg/export?format=csv&gid=0';
 
 const BRT_OFFSET_HOURS = 3;
 const BRT_OFFSET_MS = BRT_OFFSET_HOURS * 60 * 60 * 1000;
@@ -45,36 +41,14 @@ class RechargeValidator {
     }
 
     async fetchRechargeData() {
-        try {
-            const headers = {
-                'Content-Type': 'application/json'
-            };
-            
-            // Add auth token for admin requests (authToken is global from auth.js)
-            if (authToken) {
-                headers['Authorization'] = `Bearer ${authToken}`;
-            }
-            
-            const response = await fetch(`${API_BASE_URL}/api/admin/recharges`, {
-                method: 'GET',
-                headers: headers
-            });
-            
-            if (!response.ok) {
-                if (response.status === 401) {
-                    throw new Error('Unauthorized - Please login again');
-                }
-                throw new Error(`Failed to fetch recharge data: ${response.status}`);
-            }
-            
-            const csvText = await response.text();
-            this.parseRechargeCSV(csvText);
-            this.lastFetchTime = new Date();
-            return this.recharges;
-        } catch (error) {
-            console.error('Error fetching recharge data:', error);
-            throw error;
+        const response = await fetch(RECHARGE_SHEET_CSV_URL);
+        if (!response.ok) {
+            throw new Error('Failed to fetch recharge data from Google Sheets');
         }
+        const csvText = await response.text();
+        this.parseRechargeCSV(csvText);
+        this.lastFetchTime = new Date();
+        return this.recharges;
     }
 
     // ---------- Draw / cutoff helpers (BRT, merged windows) ----------

@@ -1,86 +1,46 @@
-/**
- * SECURE AUTHENTICATION
- * Login via Cloudflare Worker (credentials hidden)
- */
-
-// ✅ WORKER URL FINAL
-const API_BASE_URL = 'https://popsorte-api.danilla-vargas1923.workers.dev';
-
-// Global auth token shared across all fetchers (data-fetcher.js, results-fetcher.js, recharge-validator.js)
-let authToken = null;
-
+const AUTH_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1PK0qI9PRWaleD6jpn-aQToJ2Mn7PRW0wWfCwd2o0QPE/export?format=csv';
 const AUTH_SESSION_KEY = 'ps_admin_session';
 const AUTH_SESSION_TTL_HOURS = 12;
 
-/**
- * Login via Worker API
- */
-async function loginAdmin(account, password) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ account, password })
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok || !data.success) {
-            throw new Error(data.error || 'Login failed');
-        }
-        
-        // Save session
-        setSession(data.account, data.token);
-        
-        // Set auth token for data fetchers
-        if (typeof dataFetcher !== 'undefined') {
-            dataFetcher.setAuthToken(data.token);
-        }
-        
-        return data;
-    } catch (error) {
-        console.error('Login error:', error);
-        throw error;
+async function fetchAccounts() {
+    const response = await fetch(AUTH_SHEET_CSV_URL);
+    if (!response.ok) {
+        throw new Error('Failed to fetch credentials');
     }
+    const csvText = await response.text();
+    return parseCredentials(csvText);
 }
 
-/**
- * Save session to sessionStorage
- */
-function setSession(account, token) {
+function parseCredentials(csvText) {
+    const lines = csvText.split('\n').filter(Boolean);
+    const credentials = {};
+    for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split(',');
+        if (cols.length < 2) continue;
+        const account = cols[0].trim();
+        const password = cols[1].trim();
+        if (account && password) {
+            credentials[account] = password;
+        }
+    }
+    return credentials;
+}
+
+function setSession(account) {
     const expiresAt = Date.now() + AUTH_SESSION_TTL_HOURS * 60 * 60 * 1000;
-    const payload = { 
-        account, 
-        token,
-        expiresAt 
-    };
+    const payload = { account, expiresAt };
     sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(payload));
 }
 
-/**
- * Get current session
- */
 function getSession() {
     const raw = sessionStorage.getItem(AUTH_SESSION_KEY);
     if (!raw) return null;
-    
     try {
         const data = JSON.parse(raw);
         if (!data.expiresAt || Date.now() > data.expiresAt) {
             sessionStorage.removeItem(AUTH_SESSION_KEY);
             return null;
         }
-        
-        // Set auth token for data fetchers
-        if (data.token) {
-            authToken = data.token;
-            if (typeof dataFetcher !== 'undefined') {
-                dataFetcher.setAuthToken(data.token);
-            }
-        }
-        
         return data;
     } catch (e) {
         sessionStorage.removeItem(AUTH_SESSION_KEY);
@@ -88,17 +48,10 @@ function getSession() {
     }
 }
 
-/**
- * Clear session
- */
 function clearSession() {
     sessionStorage.removeItem(AUTH_SESSION_KEY);
-    authToken = null;
 }
 
-/**
- * Ensure user is authenticated
- */
 function ensureAuthenticated() {
     const session = getSession();
     if (!session) {
@@ -108,20 +61,9 @@ function ensureAuthenticated() {
     }
 }
 
-/**
- * Logout
- */
 function logout() {
     clearSession();
     const isNested = window.location.pathname.includes('/admin/pages/');
     const target = isNested ? '../login.html' : '/admin/login.html';
     window.location.replace(target);
-}
-
-/**
- * DEPRECATED: Old fetchAccounts function (removed for security)
- * Now handled by Worker API
- */
-async function fetchAccounts() {
-    throw new Error('Direct credential access removed for security. Use loginAdmin() instead.');
 }

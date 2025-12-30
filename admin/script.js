@@ -11,8 +11,7 @@ async function initDashboard() {
         await Promise.all([
             dataFetcher.fetchData(),
             resultsFetcher.fetchResults(),
-            rechargeValidator.fetchRechargeData(),
-            sorteFetcher.fetchSorte()
+            rechargeValidator.fetchRechargeData()
         ]);
         validator.setResults(resultsFetcher.getAllResults());
         updateDashboard();
@@ -365,7 +364,7 @@ function displayEntries() {
         let valBadge = e.validity === 'VALID' ? '<span class="badge badge-validated">✅ VALID</span>' : (e.validity === 'INVALID' ? '<span class="badge badge-pending">❌ INVALID</span>' : '<span class="badge" style="background:#6c757d;color:white;">❓ UNKNOWN</span>');
         if (e.cutoffFlag) valBadge += ' <span class="badge badge-warning">⚠️ CUTOFF</span>';
         const recInfo = e.boundRechargeId ? `<div style="font-size:11px;"><strong>ID:</strong> ${e.boundRechargeId.substring(0,16)}...<br><strong>Time:</strong> ${e.boundRechargeTime}<br><strong>Amount:</strong> R$ ${e.boundRechargeAmount}</div>` : '<span style="color:#999;font-size:11px;">No recharge bound</span>';
-        row.innerHTML = `<td>${valBadge}</td><td>${e.registrationDateTime}</td><td>${e.gameId}</td><td>${(e.platform||'POPN1')}</td><td>${e.whatsapp}</td><td><strong>${e.chosenNumbers.join(', ')}</strong></td><td>${e.drawDate}</td><td><span class="badge badge-primary">${e.contest}</span></td><td>${e.ticketNumber}</td><td>${recInfo}</td><td><button class="btn-primary" style="padding:5px 10px;font-size:12px;" onclick='showDispute(${JSON.stringify(e).replace(/'/g, "&apos;")})'>🔍 Details</button></td>`;
+        row.innerHTML = `<td>${valBadge}</td><td>${e.registrationDateTime}</td><td>${e.gameId}</td><td>${e.whatsapp}</td><td><strong>${e.chosenNumbers.join(', ')}</strong></td><td>${e.drawDate}</td><td><span class="badge badge-primary">${e.contest}</span></td><td>${e.ticketNumber}</td><td>${recInfo}</td><td><button class="btn-primary" style="padding:5px 10px;font-size:12px;" onclick='showDispute(${JSON.stringify(e).replace(/'/g, "&apos;")})'>🔍 Details</button></td>`;
     });
     updateEntriesPagination();
 }
@@ -443,21 +442,13 @@ function displayWinnersList() {
         let pe = '', pbc = ''; switch(v.matches){ case 5:pe='🏆';pbc='badge-gold';break; case 4:pe='🥈';pbc='badge-silver';break; case 3:pe='🥉';pbc='badge-bronze';break; case 2:pe='🎯';pbc='badge-green';break; case 1:pe='✨';pbc='badge-pending';break; }
         const ch = win.chosenNumbers.map(n => v.matchedNumbers.includes(n) ? `<span style="background:#4CAF50;color:white;padding:2px 6px;border-radius:4px;font-weight:bold;">${n}</span>` : `<span>${n}</span>`).join(', ');
         const ma = v.matchedNumbers.map(n => `<span style="background:#FFD700;color:#333;padding:2px 6px;border-radius:4px;font-weight:bold;">${n}</span>`).join(', ');
-        row.innerHTML = `<td><span class="badge ${pbc}">${pe} ${v.prizeTier.tier}</span></td><td><strong style="font-size:20px;color:#1e3c72;">${v.matches}</strong></td><td>${win.registrationDateTime}</td><td>${win.gameId}</td><td><strong>${win.whatsapp}</strong></td><td style="font-size:14px;">${ch}</td><td style="font-size:14px;"><strong>${v.winningNumbers.join(', ')}</strong></td><td style="font-size:14px;">${ma}</td><td>${win.drawDate}</td><td><span class="badge badge-primary">${win.contest}</span></td><td><span class="badge badge-silver">${(win.platform||'POPN1')}</span></td><td>${win.ticketNumber}<br><small>R$ ${win.prize?win.prize.toFixed(2):'0.00'}</small></td>`;
+        row.innerHTML = `<td><span class="badge ${pbc}">${pe} ${v.prizeTier.tier}</span></td><td><strong style="font-size:20px;color:#1e3c72;">${v.matches}</strong></td><td>${win.registrationDateTime}</td><td>${win.gameId}</td><td><strong>${win.whatsapp}</strong></td><td style="font-size:14px;">${ch}</td><td style="font-size:14px;"><strong>${v.winningNumbers.join(', ')}</strong></td><td style="font-size:14px;">${ma}</td><td>${win.drawDate}</td><td><span class="badge badge-primary">${win.contest}</span></td><td>${win.ticketNumber}<br><small>R$ ${win.prize?win.prize.toFixed(2):'0.00'}</small></td>`;
     });
 }
 function updateWinnersSummary(l) { const c = {1:0,2:0,3:0,4:0,5:0}; l.forEach(w => c[w.validation.matches]++); setText('sum5',c[5]); setText('sum4',c[4]); setText('sum3',c[3]); setText('sum2',c[2]); setText('sum1',c[1]); setText('sumTotal',l.length); }
 function renderTicketCreatorsComparison() {
     const e = dataFetcher.getAllEntries(), b = {}; e.forEach(en => { const k = dateKeyFromString(en.registrationDateTime); if(k){ if(!b[k]) b[k]=new Set(); b[k].add(en.gameId); } });
-    
-    // Get today and yesterday in BRT
-    const now = new Date();
-    const brtOffset = -3 * 60; // BRT is UTC-3
-    const brtNow = new Date(now.getTime() + (brtOffset - now.getTimezoneOffset()) * 60000);
-    const tISO = brtNow.toISOString().slice(0,10);
-    const yISO = new Date(brtNow.getTime() - 86400000).toISOString().slice(0,10);
-    
-    const tc = b[tISO]?b[tISO].size:0, yc = b[yISO]?b[yISO].size:0, mc = Math.max(tc,yc,1);
+    const tISO = new Date().toISOString().slice(0,10), yISO = new Date(Date.now()-86400000).toISOString().slice(0,10), tc = b[tISO]?b[tISO].size:0, yc = b[yISO]?b[yISO].size:0, mc = Math.max(tc,yc,1);
     const tb = document.getElementById('todayBarFill'), yb = document.getElementById('yesterdayBarFill'); if(tb) tb.style.height = `${(tc/mc*100).toFixed(0)}%`; if(yb) yb.style.height = `${(yc/mc*100).toFixed(0)}%`;
     setText('todayCount',tc); setText('yesterdayCount',yc);
 }

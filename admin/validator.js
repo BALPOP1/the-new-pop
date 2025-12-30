@@ -13,7 +13,7 @@ class LotteryValidator {
                 contest: r.contest,
                 drawDate: r.drawDate,
                 winningNumbers: r.winningNumbers,
-                savedAt: new Date().toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).replace(' ', 'T') + '-03:00'
+                savedAt: new Date().toISOString()
             };
         });
     }
@@ -116,14 +116,12 @@ class LotteryValidator {
             return this.allowedValidStatuses.includes(status);
         });
 
-        // Group by contest + drawDate + platform to ensure separate pools
         const grouped = {};
         eligible.forEach(entry => {
-            const platform = (entry.platform || 'POPN1').toUpperCase();
-            const key = `${entry.contest}_${entry.drawDate}_${platform}`;
+            const key = `${entry.contest}_${entry.drawDate}`;
             if (!grouped[key]) grouped[key] = [];
             const validation = this.validateEntry(entry);
-            grouped[key].push({ ...entry, platform, validation });
+            grouped[key].push({ ...entry, validation });
         });
 
         const winners = [];
@@ -131,8 +129,7 @@ class LotteryValidator {
             const winningLevel = this.getWinningLevel(group);
             if (winningLevel === 0) return;
             const levelWinners = group.filter(e => e.validation.validated && e.validation.matches === winningLevel);
-            const prizePool = 1000; // per platform per draw
-            const prizePerWinner = levelWinners.length > 0 ? prizePool / levelWinners.length : 0;
+            const prizePerWinner = levelWinners.length > 0 ? 1000 / levelWinners.length : 0;
             levelWinners.forEach(w => {
                 winners.push({ ...w, prize: prizePerWinner, winningLevel });
             });

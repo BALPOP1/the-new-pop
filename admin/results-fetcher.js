@@ -1,8 +1,4 @@
-/**
- * SECURE RESULTS FETCHER
- * Fetches results via Cloudflare Worker (not direct from Sheet)
- * Note: API_BASE_URL and authToken are declared globally in auth.js (which loads first)
- */
+const RESULTS_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1OttNYHiecAuGG6IRX7lW6lkG5ciEcL8gp3g6lNrN9H8/export?format=csv&gid=300277644';
 
 class ResultsFetcher {
     constructor() {
@@ -11,36 +7,14 @@ class ResultsFetcher {
     }
 
     async fetchResults() {
-        try {
-            const headers = {
-                'Content-Type': 'application/json'
-            };
-            
-            // Add auth token if available
-            if (authToken) {
-                headers['Authorization'] = `Bearer ${authToken}`;
-            }
-            
-            const response = await fetch(`${API_BASE_URL}/api/admin/results`, {
-                method: 'GET',
-                headers: headers
-            });
-            
-            if (!response.ok) {
-                if (response.status === 401) {
-                    throw new Error('Unauthorized - Please login again');
-                }
-                throw new Error(`Failed to fetch results: ${response.status}`);
-            }
-            
-            const csvText = await response.text();
-            this.results = this.parseCSV(csvText);
-            this.lastFetchTime = new Date();
-            return this.results;
-        } catch (error) {
-            console.error('Error fetching results:', error);
-            throw error;
+        const response = await fetch(RESULTS_SHEET_CSV_URL);
+        if (!response.ok) {
+            throw new Error('Failed to fetch draw results');
         }
+        const csvText = await response.text();
+        this.results = this.parseCSV(csvText);
+        this.lastFetchTime = new Date();
+        return this.results;
     }
 
     parseCSV(csvText) {
@@ -110,78 +84,3 @@ class ResultsFetcher {
 
 // Global instance
 const resultsFetcher = new ResultsFetcher();
-
-class SorteFetcher {
-    constructor() {
-        this.rows = [];
-        this.lastFetchTime = null;
-    }
-
-    async fetchSorte(format = 'json') {
-        try {
-            const headers = {
-                'Content-Type': 'application/json'
-            };
-            if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
-
-            const qs = format === 'csv' ? '?format=csv' : '';
-            const response = await fetch(`${API_BASE_URL}/api/admin/sorte${qs}`, {
-                method: 'GET',
-                headers
-            });
-
-            if (!response.ok) {
-                if (response.status === 401) throw new Error('Unauthorized - Please login again');
-                throw new Error(`Failed to fetch SORTE: ${response.status}`);
-            }
-
-            if (format === 'csv') {
-                const csvText = await response.text();
-                this.rows = this.parseCSV(csvText);
-            } else {
-                const json = await response.json();
-                this.rows = json.values || [];
-            }
-
-            this.lastFetchTime = new Date();
-            return this.rows;
-        } catch (err) {
-            console.error('Error fetching SORTE:', err);
-            throw err;
-        }
-    }
-
-    parseCSV(csvText) {
-        const lines = csvText.split('\n').filter(Boolean);
-        const rows = [];
-        for (const line of lines) {
-            rows.push(this.parseCSVLine(line));
-        }
-        return rows;
-    }
-
-    parseCSVLine(line) {
-        const values = [];
-        let current = '';
-        let inQuotes = false;
-        for (let i = 0; i < line.length; i++) {
-            const ch = line[i];
-            if (ch === '"') {
-                inQuotes = !inQuotes;
-            } else if (ch === ',' && !inQuotes) {
-                values.push(current.trim());
-                current = '';
-            } else {
-                current += ch;
-            }
-        }
-        values.push(current.trim());
-        return values;
-    }
-
-    getAllRows() {
-        return this.rows;
-    }
-}
-
-const sorteFetcher = new SorteFetcher();

@@ -1,8 +1,4 @@
-/**
- * SECURE DATA FETCHER
- * Fetches data via Cloudflare Worker (not direct from Sheet)
- * Note: API_BASE_URL and authToken are declared globally in auth.js (which loads first)
- */
+const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1OttNYHiecAuGG6IRX7lW6lkG5ciEcL8gp3g6lNrN9H8/export?format=csv&gid=0';
 
 class DataFetcher {
     constructor() {
@@ -10,33 +6,12 @@ class DataFetcher {
         this.lastFetchTime = null;
     }
 
-    setAuthToken(token) {
-        authToken = token;
-    }
-
     async fetchData() {
         try {
-            const headers = {
-                'Content-Type': 'application/json'
-            };
-            
-            // Add auth token for admin requests
-            if (authToken) {
-                headers['Authorization'] = `Bearer ${authToken}`;
-            }
-            
-            const response = await fetch(`${API_BASE_URL}/api/admin/entries`, {
-                method: 'GET',
-                headers: headers
-            });
-            
+            const response = await fetch(GOOGLE_SHEET_CSV_URL);
             if (!response.ok) {
-                if (response.status === 401) {
-                    throw new Error('Unauthorized - Please login again');
-                }
-                throw new Error(`Failed to fetch data: ${response.status}`);
+                throw new Error('Failed to fetch data from Google Sheets');
             }
-            
             const csvText = await response.text();
             this.entries = this.parseCSV(csvText);
             this.lastFetchTime = new Date();
@@ -57,21 +32,20 @@ class DataFetcher {
             if (!line) continue;
             
             const values = this.parseCSVLine(line);
-            if (values.length < 9) continue;
+            if (values.length < 8) continue;
             
             const entry = {
                 registrationDateTime: values[0],
-                platform: (values[1] || 'POPN1').toUpperCase(),
-                gameId: values[2],
-                whatsapp: values[3],
-                chosenNumbers: this.parseNumbers(values[4]),
-                drawDate: values[5],
-                contest: values[6],
-                ticketNumber: values[7],
-                status: values[8]
+                gameId: values[1],
+                whatsapp: values[2],
+                chosenNumbers: this.parseNumbers(values[3]),
+                drawDate: values[4],
+                contest: values[5],
+                ticketNumber: values[6],
+                status: values[7]
             };
             
-            entries.push(entry);
+            entries. push(entry);
         }
         
         return entries;
@@ -95,7 +69,7 @@ class DataFetcher {
             }
         }
         
-        values.push(current.trim());
+        values. push(current.trim());
         return values;
     }
 
@@ -109,7 +83,7 @@ class DataFetcher {
     }
 
     getEntryById(gameId) {
-        return this.entries.find(entry => entry.gameId === gameId);
+        return this. entries.find(entry => entry. gameId === gameId);
     }
 
     getEntriesByContest(contest) {
@@ -121,13 +95,13 @@ class DataFetcher {
     }
 
     getUniqueContests() {
-        const contests = [...new Set(this.entries.map(entry => entry.contest))];
-        return contests.sort();
+        const contests = [... new Set(this.entries.map(entry => entry.contest))];
+        return contests. sort();
     }
 
     getUniqueDrawDates() {
         const dates = [...new Set(this.entries.map(entry => entry.drawDate))];
-        return dates.sort();
+        return dates. sort();
     }
 
     getStatistics() {
@@ -141,9 +115,9 @@ class DataFetcher {
         
         return {
             totalEntries: this.entries.length,
-            uniqueContests: this.getUniqueContests().length,
+            uniqueContests:  this.getUniqueContests().length,
             uniqueDrawDates: this.getUniqueDrawDates().length,
-            pendingEntries: this.entries.filter(e => e.status === 'PENDENTE').length,
+            pendingEntries: this.entries. filter(e => e.status === 'PENDENTE').length,
             contestBreakdown: contestCounts,
             dateBreakdown: dateCounts
         };
