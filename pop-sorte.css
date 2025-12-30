@@ -1307,10 +1307,12 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   padding: 0; 
   border-radius: 15px; 
   width: 90%; 
-  max-width: 500px; 
+  max-width: 500px;
   max-height: 90vh;
   isolation: isolate;
-  overflow: visible;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 .user-info-popup-content::before {
   content: "";
@@ -1340,15 +1342,19 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
 }
 .close-popup { position: absolute; right: 15px; top: 15px; font-size: 28px; font-weight: bold; color: #aaa; cursor: pointer; z-index: 1; }
 .user-info-popup-body { 
-  padding: 40px 20px 20px; 
+  padding: 40px 20px 20px;
   overflow-y: auto;
-  max-height: calc(90vh - 80px);
   -webkit-overflow-scrolling: touch;
+  flex: 1;
+  min-height: 0;
 }
 .user-info-popup-content {
-  overflow: visible;
+  overflow: hidden;
 }
 .popup-title { font-size: 1.3rem; color: var(--primary); margin-bottom: 20px; text-align: center; font-weight: 700; }
+@media (max-width: 640px) {
+  .popup-title { font-size: 1.1rem; margin-bottom: 16px; }
+}
 .form-group { margin-bottom: 15px; }
 .form-label { display: block; font-weight: 700; margin-bottom: 5px; font-size: 0.85rem; color: var(--dark); }
 .form-input { width: 100%; padding: 12px; border: 2px solid #dfe6e9; border-radius: 8px; font-size: 0.9rem; }
@@ -1438,16 +1444,18 @@ body { font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
   }
   .user-info-popup-content {
     width: 94%;
+    max-width: 94%;
     border-radius: 12px;
     top: 20px;
     left: 50%;
     transform: translateX(-50%);
-    margin-bottom: 20px;
     max-height: calc(100vh - 40px);
     position: relative;
+    margin-bottom: 20px;
   }
   .user-info-popup-body {
     padding: 28px 16px 18px;
+    max-height: calc(100vh - 120px);
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
