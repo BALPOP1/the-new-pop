@@ -610,8 +610,8 @@ function initLatestFiveWidget() {
     const errEl = document.getElementById('latest5Error');
     if (!listEl) return;
 
-    // Use Worker API for entries
-    const latest5Url = `${API_BASE_URL}/api/admin/entries`;
+    // Use Google Sheets CSV export with blurred data (secure)
+    const latest5Url = 'https://docs.google.com/spreadsheets/d/1OttNYHiecAuGG6IRX7lW6lkG5ciEcL8gp3g6lNrN9H8/export?format=csv&gid=0';
 
     const render = (entries) => {
         if (errEl) errEl.style.display = 'none';
@@ -1335,9 +1335,9 @@ function updateDrawDateDisplay() {
   // DEV PROTECTION DISABLED
 })();
 
-// ✅ VLD Ticket Consultation Functionality (uses Worker API)
+// ✅ VLD Ticket Consultation Functionality (uses Google Sheets with blurred data)
 (function() {
-  const ENTRIES_URL = `${API_BASE_URL}/api/admin/entries`;
+  const ENTRIES_URL = 'https://docs.google.com/spreadsheets/d/1OttNYHiecAuGG6IRX7lW6lkG5ciEcL8gp3g6lNrN9H8/export?format=csv&gid=0';
   
   let allEntries = [], filteredEntries = [];
   let currentFilter = 'all', searchTerm = '';
