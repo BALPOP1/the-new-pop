@@ -397,17 +397,9 @@
             <div class="user-info-popup-body">
                 <h3 class="popup-title">⚠️ CONFIRMAÇÃO ⚠️</h3>
                 
-                <div class="form-group"> 
-                    <label class="form-label platform-label">   </label>
-                    <div class="platform-switch" style="display: flex; gap: 10px;">
-                        <div class="platform-pill" id="platformBadgePopup" style="flex: 1; display: flex; align-items: center; justify-content: center;">POPLUZ</div>
-                        <label class="platform-option" style="flex: 1;">
-                            <input type="radio" name="platformChoice" value="POPLUZ" checked>
-                            <span>P O P L U Z</span>
-                        </label>
-                    </div>
-                    <p class="platform-hint">POPLUZ estará disponível em breve. Por enquanto, use apenas POPN1.</p>
-                </div>
+                <!-- Hidden platform selection for JavaScript -->
+                <input type="radio" name="platformChoice" value="POPLUZ" checked style="display: none;">
+                <div id="platformBadgePopup" style="display: none;">POPLUZ</div>
 
                 <div class="form-group">
                     <label class="form-label">ID DO JOGO POPLUZ</label>
