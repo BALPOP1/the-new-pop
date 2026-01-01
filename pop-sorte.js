@@ -661,11 +661,17 @@ function initLatestFiveWidget() {
         listEl.innerHTML = '<div class="latest5-loading">Carregando últimos bilhetes...</div>';
 
         try {
-            const url = `${latest5Url}?t=${Date.now()}`;
-            const res = await fetch(url, { cache: 'no-store' });
+            // Append cache-busting parameter with & since URL already has query params
+            const url = `${latest5Url}&t=${Date.now()}`;
+            const res = await fetch(url, { cache: 'no-store', redirect: 'follow' });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             
             const csv = await res.text();
+            
+            // Check if we got HTML instead of CSV (Google Sheets might return login page)
+            if (csv.trim().startsWith('<!DOCTYPE') || csv.trim().startsWith('<html')) {
+                throw new Error('Received HTML instead of CSV. Sheet may not be publicly accessible.');
+            }
             const lines = csv.split(/\r?\n/).filter(Boolean);
             if (lines.length <= 1) throw new Error('CSV vazio');
 
@@ -1408,11 +1414,17 @@ function updateDrawDateDisplay() {
 
   async function fetchEntries(){
     try{
-      const url = `${ENTRIES_URL}?t=${Date.now()}`;
-      const res = await fetch(url, { cache: 'no-store' });
+      // Append cache-busting parameter with & since URL already has query params
+      const url = `${ENTRIES_URL}&t=${Date.now()}`;
+      const res = await fetch(url, { cache: 'no-store', redirect: 'follow' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       
       const csv = await res.text();
+      
+      // Check if we got HTML instead of CSV (Google Sheets might return login page)
+      if (csv.trim().startsWith('<!DOCTYPE') || csv.trim().startsWith('<html')) {
+        throw new Error('Received HTML instead of CSV. Sheet may not be publicly accessible.');
+      }
       const lines = csv.split(/\r?\n/).filter(Boolean);
       if (lines.length <= 1) throw new Error('CSV vazio');
 
